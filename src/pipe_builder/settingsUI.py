@@ -72,8 +72,6 @@ class NodeSettingsBox(QtWidgets.QTabWidget):
         self.addTab(self.tab_shelf, 'Shelf')
         self.addTab(self.tab_preflights, 'Preflights')
 
-
-
         # add node properties
 
         # add the input table
