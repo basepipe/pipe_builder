@@ -1418,7 +1418,7 @@ class NodeItem(QtWidgets.QGraphicsItem):
                                 'automation_level': automation_level,
                                 'priority': priority,
                                 'methodology': methodology,
-                                'durattion': duration,
+                                'duration': duration,
                                 'frequency': frequency,
                                 'number_effected': number_effected
                                 }
