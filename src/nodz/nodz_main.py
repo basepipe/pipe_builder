@@ -1714,7 +1714,10 @@ class NodeItem(QtWidgets.QGraphicsItem):
             self.priMed /= counter
 
         self.updateShadow()
-        self.scene().parent().parent().settingWidgets.refresh(self.scene().parent().parent().query_selected_node_info())
+        # TODO - this is a bit of a mess ;) we need to make this clearer in terms of what it's querying.
+        self.scene().parent().parent().parent().settingWidgets.refresh(
+            self.scene().parent().parent().parent().query_selected_node_info())
+
         self.scene().updateScene()
 
     def updateShadow(self):
