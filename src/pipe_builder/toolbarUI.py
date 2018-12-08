@@ -44,7 +44,7 @@ class Toolbar(QtWidgets.QWidget):
         self.setLayout(lay)
 
     def graph_create_node(self):
-        defaults = {'description': 'None', 'pipeID': 1, 'software': 'Maya', 'other': 'Test', 'preflight_data': {}}
+        defaults = {'description': 'None', 'pipeID': 1, 'software': '', 'other': 'Test', 'preflight_data': {}}
         self.graph.createNode(name='NewNode', preset='node_preset_1', position=None, **defaults)
 
     def save(self):

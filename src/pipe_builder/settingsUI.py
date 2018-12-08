@@ -4,6 +4,8 @@ from Qt import QtWidgets, QtGui, QtCore
 
 class NodeSettingWidget(QtWidgets.QWidget):
     signal_SaveSettings = QtCore.Signal(dict)
+    signal_nothing_selected = QtCore.Signal()
+    signal_something_selected = QtCore.Signal()
 
     def __init__(self, parent):
         QtWidgets.QWidget.__init__(self)
@@ -33,12 +35,16 @@ class NodeSettingWidget(QtWidgets.QWidget):
     def refresh(self, settingData):
         # clear out widget
         self.settings = settingData
-        for i in reversed(range(self.settingsbox.count())):
-            self.settingsbox.itemAt(i).widget().setParent(None)
+        if self.settings:
+            self.signal_something_selected.emit()
+            for i in reversed(range(self.settingsbox.count())):
+                self.settingsbox.itemAt(i).widget().setParent(None)
 
-        # add default settings
-        for settings in settingData:
-            self.settingsbox.addWidget(NodeSettingsBox(parent=self.parent, values=settings, save=self._savesettings))
+            # add default settings
+            for settings in settingData:
+                self.settingsbox.addWidget(NodeSettingsBox(parent=self.parent, values=settings, save=self._savesettings))
+        else:
+            self.signal_nothing_selected.emit()
 
     def _savesettings(self):
         for i in reversed(range(self.settingsbox.count())):
