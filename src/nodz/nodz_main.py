@@ -922,9 +922,18 @@ class Nodz(QtWidgets.QGraphicsView):
                 automation_level = attrData['automation_level']
                 priority = attrData['priority']
                 methodology = attrData['methodology']
-                duration = attrData['duration']
-                frequency = attrData['frequency']
-                number_effected = attrData['numberEffected']
+                if 'duration' in attrData:
+                    duration = attrData['duration']
+                else:
+                    duration = ''
+                if 'frequency' in attrData:
+                    frequency = attrData['frequency']
+                else:
+                    frequency = ''
+                if 'numberEffected' in attrData:
+                    number_effected = attrData['numberEffected']
+                else:
+                    number_effected = ''
 
                 # un-serialize data type if needed
                 if (isinstance(dataType, unicode) and dataType.find('<') == 0):
