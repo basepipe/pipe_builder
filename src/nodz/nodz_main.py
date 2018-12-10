@@ -1,9 +1,8 @@
 import os
-
+import pandas as pd
 from Qt import QtGui, QtCore, QtWidgets
 import nodz_utils as utils
-from apps.pipe_builder.inputUI import NameInputs
-import pandas as pd
+from pipe_builder.inputUI import NameInputs
 
 
 defaultConfigPath = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'default_config.json')
@@ -35,7 +34,7 @@ class Nodz(QtWidgets.QGraphicsView):
     signal_SocketConnected = QtCore.Signal(object, object, object, object)
     signal_SocketDisconnected = QtCore.Signal(object, object, object, object)
 
-    signal_GraphSaved = QtCore.Signal()
+    signal_GraphSaved = QtCore.Signal(object)
     signal_GraphLoaded = QtCore.Signal()
     signal_GraphCleared = QtCore.Signal()
     signal_GraphEvaluated = QtCore.Signal()
@@ -851,14 +850,22 @@ class Nodz(QtWidgets.QGraphicsView):
 
         # Save data.
         #try:
-        utils._saveData(filePath=filePath, data=data)
+
         #except:
         #    print 'Invalid path : {0}'.format(filePath)
         #    print 'Save aborted !'
         #    return False
 
         # Emit signal.
-        self.signal_GraphSaved.emit()
+        path, ext = os.path.splitext(filePath)
+        jsonPath = '%s.json' % path
+        jpgPath = '%s.jpg' % path
+        csvPath = '%s.csv' % path
+
+        utils._saveData(filePath=jsonPath, data=data)
+        self.signal_GraphSaved.emit(jsonPath)
+        self.saveCSV(csvPath)
+        self.exportImage(jpgPath)
 
     def loadGraph(self, filePath='path'):
         """

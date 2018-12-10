@@ -17,12 +17,15 @@ def openStylesheet():
         # cleanString = re.sub('//.*?\n|/\*.*?\*/', '', fileString, re.S)
         return fileString
 
+
 STYLESHEET = openStylesheet()
 
 
 class PipeBuilder(QtWidgets.QDialog):
     def __init__(self):
         QtWidgets.QDialog.__init__(self)
+
+        self.setWindowTitle('New Data Mapping Session - Not Saved')
         self.graph = nodz.Nodz(None)
         # nodz.loadConfig(filePath='')
 
@@ -127,8 +130,8 @@ class PipeBuilder(QtWidgets.QDialog):
 
     # Graph
     @QtCore.Slot()
-    @staticmethod
-    def on_graphSaved():
+    def on_graphSaved(self, data):
+        self.setWindowTitle(data)
         print 'graph saved !'
 
     @QtCore.Slot()
