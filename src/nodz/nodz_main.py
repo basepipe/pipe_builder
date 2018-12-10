@@ -35,7 +35,7 @@ class Nodz(QtWidgets.QGraphicsView):
     signal_SocketDisconnected = QtCore.Signal(object, object, object, object)
 
     signal_GraphSaved = QtCore.Signal(object)
-    signal_GraphLoaded = QtCore.Signal()
+    signal_GraphLoaded = QtCore.Signal(object)
     signal_GraphCleared = QtCore.Signal()
     signal_GraphEvaluated = QtCore.Signal()
 
@@ -974,7 +974,7 @@ class Nodz(QtWidgets.QGraphicsView):
         self.scene().update()
 
         # Emit signal.
-        self.signal_GraphLoaded.emit()
+        self.signal_GraphLoaded.emit(filePath)
 
     def saveCSV(self, filePath="path"):
         self.csv = pd.DataFrame(columns=self.csv.columns)
