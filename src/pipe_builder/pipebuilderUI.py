@@ -135,8 +135,8 @@ class PipeBuilder(QtWidgets.QDialog):
         print 'graph saved !'
 
     @QtCore.Slot()
-    @staticmethod
-    def on_graphLoaded():
+    def on_graphLoaded(self, data):
+        self.setWindowTitle(data)
         print 'graph loaded !'
 
     @QtCore.Slot()
