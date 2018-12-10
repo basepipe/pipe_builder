@@ -165,7 +165,6 @@ class NodeSettingsBox(QtWidgets.QTabWidget):
                 inputs += 1
         self.outputs_table.setRowCount(outputs)
         self.inputs_table.setRowCount(inputs)
-        print 'ATTRSDATA', attrsData
         for attr_name in attrsData:
             print attr_name
             name = QtWidgets.QTableWidgetItem(str(attr_name))
@@ -251,6 +250,7 @@ class NodeSettingsBox(QtWidgets.QTabWidget):
             if hasattr(widget, 'objectname'):
                 self.parent.settingWidgets.settings[0][widget.objectname] = widget.value
 
+
 class SettingField(QtWidgets.QWidget):
     '''
     Contains a label and a text box
@@ -262,6 +262,7 @@ class SettingField(QtWidgets.QWidget):
         self.setMinimumHeight(22)
         self.objectname = title
         setname = QtWidgets.QLabel('%s: ' % title)
+        setname.setFixedWidth(80)
         self.textbox = QtWidgets.QLineEdit(value)
         self.textbox.setFixedWidth(200)
         self.textbox.setFixedHeight(22)
@@ -269,6 +270,7 @@ class SettingField(QtWidgets.QWidget):
             self.textbox.textChanged.connect(save)
         lay.addWidget(setname)
         lay.addWidget(self.textbox)
+        lay.addItem(QtWidgets.QSpacerItem(0, 0, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum))
         self.setLayout(lay)
 
     @property
