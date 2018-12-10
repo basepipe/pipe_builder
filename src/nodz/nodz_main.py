@@ -1,9 +1,8 @@
 import os
-
+import pandas as pd
 from Qt import QtGui, QtCore, QtWidgets
 import nodz_utils as utils
-from apps.pipe_builder.inputUI import NameInputs
-import pandas as pd
+from pipe_builder.inputUI import NameInputs
 
 
 defaultConfigPath = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'default_config.json')
@@ -35,7 +34,7 @@ class Nodz(QtWidgets.QGraphicsView):
     signal_SocketConnected = QtCore.Signal(object, object, object, object)
     signal_SocketDisconnected = QtCore.Signal(object, object, object, object)
 
-    signal_GraphSaved = QtCore.Signal()
+    signal_GraphSaved = QtCore.Signal(object)
     signal_GraphLoaded = QtCore.Signal()
     signal_GraphCleared = QtCore.Signal()
     signal_GraphEvaluated = QtCore.Signal()
@@ -68,7 +67,8 @@ class Nodz(QtWidgets.QGraphicsView):
         self.currentState = 'DEFAULT'
         self.pressedKeys = list()
         self.newPlugs = None
-        self.csv = pd.DataFrame(columns = ['Process', 'Plugs', 'Priority', 'Methodology'])
+        self.csv = pd.DataFrame(columns=['Process', 'Plugs', 'Priority', 'Methodology', 'Duration', 'Frequency',
+                                         'Number Effected'])
 
     def wheelEvent(self, event):
         """
@@ -631,7 +631,8 @@ class Nodz(QtWidgets.QGraphicsView):
     # ATTRS
     def createAttribute(self, node, name='default', index=-1, preset='attr_default', plug=True, socket=True,
                         dataType=None, plugMaxConnections=-1, socketMaxConnections=1, automation_level='Manual',
-                        priority='Low', methodology='Artist Driven'):
+                        priority='Low', methodology='Artist Driven', duration=None, frequency=None,
+                        number_effected=None,):
 
         """
         Create a new attribute with a given name.
@@ -683,7 +684,8 @@ class Nodz(QtWidgets.QGraphicsView):
         spInst = node._createAttribute(name=name, index=index, preset=preset, plug=plug, socket=socket,
                                        dataType=dataType, plugMaxConnections=plugMaxConnections,
                                        socketMaxConnections=socketMaxConnections, automation_level=automation_level,
-                                       priority=priority, methodology=methodology)
+                                       priority=priority, methodology=methodology, duration=duration,
+                                       frequency=frequency, number_effected=number_effected)
 
         # Emit signal.
         self.signal_AttrCreated.emit(node.name, index)
@@ -848,14 +850,22 @@ class Nodz(QtWidgets.QGraphicsView):
 
         # Save data.
         #try:
-        utils._saveData(filePath=filePath, data=data)
+
         #except:
         #    print 'Invalid path : {0}'.format(filePath)
         #    print 'Save aborted !'
         #    return False
 
         # Emit signal.
-        self.signal_GraphSaved.emit()
+        path, ext = os.path.splitext(filePath)
+        jsonPath = '%s.json' % path
+        jpgPath = '%s.jpg' % path
+        csvPath = '%s.csv' % path
+
+        utils._saveData(filePath=jsonPath, data=data)
+        self.signal_GraphSaved.emit(jsonPath)
+        self.saveCSV(csvPath)
+        self.exportImage(jpgPath)
 
     def loadGraph(self, filePath='path'):
         """
@@ -912,6 +922,9 @@ class Nodz(QtWidgets.QGraphicsView):
                 automation_level = attrData['automation_level']
                 priority = attrData['priority']
                 methodology = attrData['methodology']
+                duration = attrData['duration']
+                frequency = attrData['frequency']
+                number_effected = attrData['numberEffected']
 
                 # un-serialize data type if needed
                 if (isinstance(dataType, unicode) and dataType.find('<') == 0):
@@ -926,9 +939,12 @@ class Nodz(QtWidgets.QGraphicsView):
                                      dataType=dataType,
                                      plugMaxConnections=plugMaxConnections,
                                      socketMaxConnections=socketMaxConnections,
-                                     automation_level = automation_level,
-                                     priority = priority,
-                                     methodology = methodology
+                                     automation_level=automation_level,
+                                     priority=priority,
+                                     methodology=methodology,
+                                     duration=duration,
+                                     frequency=frequency,
+                                     number_effected=number_effected
                                      )
 
         # Apply connections data.
@@ -972,9 +988,23 @@ class Nodz(QtWidgets.QGraphicsView):
             # inputs = []
             # outputs = []
             for plug in self.scene().nodes[item].plugs.keys():
-                self.csv = self.csv.append(pd.DataFrame([[item + " Output", plug, self.scene().nodes[item].attrsData[plug]['priority'], self.scene().nodes[item].attrsData[plug]['methodology']]], columns=self.csv.columns), ignore_index=True)
+                self.csv = self.csv.append(pd.DataFrame([[item + " Output", plug,
+                                                          self.scene().nodes[item].attrsData[plug]['priority'],
+                                                          self.scene().nodes[item].attrsData[plug]['methodology'],
+                                                          self.scene().nodes[item].attrsData[plug]['duration'],
+                                                          self.scene().nodes[item].attrsData[plug]['frequency'],
+                                                          self.scene().nodes[item].attrsData[plug]['number_effected']
+                                                          ]],
+                                                        columns=self.csv.columns), ignore_index=True)
             for plug in self.scene().nodes[item].sockets.keys():
-                self.csv = self.csv.append(pd.DataFrame([[item + " Input", plug, self.scene().nodes[item].attrsData[plug]['priority'], self.scene().nodes[item].attrsData[plug]['methodology']]], columns=self.csv.columns), ignore_index=True)
+                self.csv = self.csv.append(pd.DataFrame([[item + " Input", plug,
+                                                          self.scene().nodes[item].attrsData[plug]['priority'],
+                                                          self.scene().nodes[item].attrsData[plug]['methodology'],
+                                                          self.scene().nodes[item].attrsData[plug]['duration'],
+                                                          self.scene().nodes[item].attrsData[plug]['frequency'],
+                                                          self.scene().nodes[item].attrsData[plug]['number_effected']
+                                                          ]],
+                                                        columns=self.csv.columns), ignore_index=True)
         self.csv.to_csv(path_or_buf=filePath, index=False)
 
     def exportImage(self, filePath=None):
@@ -1316,7 +1346,7 @@ class NodeItem(QtWidgets.QGraphicsItem):
 
 
     def _createAttribute(self, name, index, preset, plug, socket, dataType, plugMaxConnections, socketMaxConnections,
-                         automation_level, priority, methodology):
+                         automation_level, priority, methodology, duration, frequency, number_effected):
         """
         Create an attribute by expanding the node, adding a label and
         connection items.
@@ -1394,7 +1424,10 @@ class NodeItem(QtWidgets.QGraphicsItem):
                                 'socketMaxConnections': socketMaxConnections,
                                 'automation_level': automation_level,
                                 'priority': priority,
-                                'methodology': methodology
+                                'methodology': methodology,
+                                'duration': duration,
+                                'frequency': frequency,
+                                'number_effected': number_effected
                                 }
 
         # Update node height.
@@ -1688,7 +1721,10 @@ class NodeItem(QtWidgets.QGraphicsItem):
             self.priMed /= counter
 
         self.updateShadow()
-        self.scene().parent().parent().settingWidgets.refresh(self.scene().parent().parent().query_selected_node_info())
+        # TODO - this is a bit of a mess ;) we need to make this clearer in terms of what it's querying.
+        self.scene().parent().parent().parent().settingWidgets.refresh(
+            self.scene().parent().parent().parent().query_selected_node_info())
+
         self.scene().updateScene()
 
     def updateShadow(self):

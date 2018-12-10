@@ -17,12 +17,15 @@ def openStylesheet():
         # cleanString = re.sub('//.*?\n|/\*.*?\*/', '', fileString, re.S)
         return fileString
 
+
 STYLESHEET = openStylesheet()
 
 
 class PipeBuilder(QtWidgets.QDialog):
     def __init__(self):
         QtWidgets.QDialog.__init__(self)
+
+        self.setWindowTitle('New Data Mapping Session - Not Saved')
         self.graph = nodz.Nodz(None)
         # nodz.loadConfig(filePath='')
 
@@ -33,25 +36,36 @@ class PipeBuilder(QtWidgets.QDialog):
         self.setStyleSheet(STYLESHEET)
 
         ###### LAYOUT ##########
-        scroll = QtWidgets.QScrollArea()
+        self.scroll = QtWidgets.QScrollArea()
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
-        scroll.setSizePolicy(sizePolicy)
-        scroll.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
-        scroll.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
-        scroll.setWidgetResizable(True)
-        # scroll.setFixedHeight(740)
-        scroll.setFixedWidth(450)
+        self.scroll.setSizePolicy(sizePolicy)
+        self.scroll.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        self.scroll.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        self.scroll.setWidgetResizable(True)
+        self.scroll.setMinimumHeight(240)
+        # scroll.setFixedWidth(450)
+        self.splitter = QtWidgets.QSplitter(QtCore.Qt.Vertical)
 
-
-        scroll.setWidget(self.settingWidgets)
+        self.scroll.setWidget(self.settingWidgets)
         self.toolbar = Toolbar(parent=self)
+        # v_lay = QtWidgets.QVBoxLayout()
         lay = QtWidgets.QHBoxLayout()
 
         lay.addWidget(self.toolbar)
-        lay.addWidget(self.graph)
-        lay.addWidget(scroll)
-
+        self.splitter.addWidget(self.graph)
+        self.splitter.addWidget(self.scroll)
+        lay.addWidget(self.splitter)
         self.setLayout(lay)
+        self.scroll.hide()
+
+        self.settingWidgets.signal_nothing_selected.connect(self.on_select_nothing)
+        self.settingWidgets.signal_something_selected.connect(self.on_select_item)
+
+    def on_select_nothing(self):
+        self.scroll.hide()
+
+    def on_select_item(self):
+        self.scroll.show()
 
     # Nodes
     @QtCore.Slot(str)
@@ -116,8 +130,8 @@ class PipeBuilder(QtWidgets.QDialog):
 
     # Graph
     @QtCore.Slot()
-    @staticmethod
-    def on_graphSaved():
+    def on_graphSaved(self, data):
+        self.setWindowTitle(data)
         print 'graph saved !'
 
     @QtCore.Slot()

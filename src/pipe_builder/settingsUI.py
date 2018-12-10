@@ -4,6 +4,8 @@ from Qt import QtWidgets, QtGui, QtCore
 
 class NodeSettingWidget(QtWidgets.QWidget):
     signal_SaveSettings = QtCore.Signal(dict)
+    signal_nothing_selected = QtCore.Signal()
+    signal_something_selected = QtCore.Signal()
 
     def __init__(self, parent):
         QtWidgets.QWidget.__init__(self)
@@ -33,12 +35,16 @@ class NodeSettingWidget(QtWidgets.QWidget):
     def refresh(self, settingData):
         # clear out widget
         self.settings = settingData
-        for i in reversed(range(self.settingsbox.count())):
-            self.settingsbox.itemAt(i).widget().setParent(None)
+        if self.settings:
+            self.signal_something_selected.emit()
+            for i in reversed(range(self.settingsbox.count())):
+                self.settingsbox.itemAt(i).widget().setParent(None)
 
-        # add default settings
-        for settings in settingData:
-            self.settingsbox.addWidget(NodeSettingsBox(parent=self.parent, values=settings, save=self._savesettings))
+            # add default settings
+            for settings in settingData:
+                self.settingsbox.addWidget(NodeSettingsBox(parent=self.parent, values=settings, save=self._savesettings))
+        else:
+            self.signal_nothing_selected.emit()
 
     def _savesettings(self):
         for i in reversed(range(self.settingsbox.count())):
@@ -72,19 +78,17 @@ class NodeSettingsBox(QtWidgets.QTabWidget):
         self.addTab(self.tab_shelf, 'Shelf')
         self.addTab(self.tab_preflights, 'Preflights')
 
-
-
         # add node properties
 
         # add the input table
         self.inputs_table = QtWidgets.QTableWidget()
-        self.inputs_table.setColumnCount(4)
-        self.inputs_table.setHorizontalHeaderLabels(['Name', 'Automation Level', 'Priority', 'Methodology'])
-
+        self.inputs_table.setColumnCount(7)
+        self.inputs_table.setHorizontalHeaderLabels(['Name', 'Automation Level', 'Priority', 'Methodology', 'Duration',
+                                                     'Frequency', 'Number People Effected'])
         self.outputs_table = QtWidgets.QTableWidget()
-        self.outputs_table.setColumnCount(4)
-        self.outputs_table.setHorizontalHeaderLabels(['Name', 'Automation Level', 'Priority', 'Methodology'])
-
+        self.outputs_table.setColumnCount(7)
+        self.outputs_table.setHorizontalHeaderLabels(['Name', 'Automation Level', 'Priority', 'Methodology', 'Duration',
+                                                     'Frequency', 'Number People Effected'])
         self.preflights_table = QtWidgets.QTableWidget()
         self.preflights_table.setColumnCount(4)
         self.preflights_table.setHorizontalHeaderLabels(['Name', 'Description', 'Required', 'Module'])
@@ -161,11 +165,16 @@ class NodeSettingsBox(QtWidgets.QTabWidget):
                 inputs += 1
         self.outputs_table.setRowCount(outputs)
         self.inputs_table.setRowCount(inputs)
+        print 'ATTRSDATA', attrsData
         for attr_name in attrsData:
+            print attr_name
             name = QtWidgets.QTableWidgetItem(str(attr_name))
             automation_level = QtWidgets.QTableWidgetItem(str(attrsData[attr_name]['automation_level']))
             priority = QtWidgets.QTableWidgetItem(attrsData[attr_name]['priority'])
             methodology = QtWidgets.QTableWidgetItem(attrsData[attr_name]['methodology'])
+            duration = QtWidgets.QTableWidgetItem(attrsData[attr_name]['duration'])
+            frequency = QtWidgets.QTableWidgetItem(attrsData[attr_name]['frequency'])
+            number_effected = QtWidgets.QTableWidgetItem(attrsData[attr_name]['number_effected'])
             if attrsData[attr_name]['plug']:
                 ip += 1
                 i = ip
@@ -178,6 +187,9 @@ class NodeSettingsBox(QtWidgets.QTabWidget):
             table.setItem(i, 1, automation_level)
             table.setItem(i, 2, priority)
             table.setItem(i, 3, methodology)
+            table.setItem(i, 4, duration)
+            table.setItem(i, 5, frequency)
+            table.setItem(i, 6, number_effected)
 
     def spawn_properties(self, values, save):
         for attr, val in values.iteritems():
@@ -202,6 +214,12 @@ class NodeSettingsBox(QtWidgets.QTabWidget):
             plugs[name]['priority'] = self.sender().item(item.row(), 2).text()
         elif item.column() == 3:
             plugs[name]['methodology'] = self.sender().item(item.row(), 3).text()
+        elif item.column() == 4:
+            plugs[name]['duration'] = self.sender().item(item.row(), 4).text()
+        elif item.column() == 5:
+            plugs[name]['frequency'] = self.sender().item(item.row(), 5).text()
+        elif item.column() == 6:
+            plugs[name]['number_effected'] = self.sender().item(item.row(), 6).text()
         elif item.column() == 0:
             index_ = node.attrs.index(self.old_name)
             nodz.editAttribute(node=node, index=index_, newName=name,
