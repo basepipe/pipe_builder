@@ -17,11 +17,12 @@ class Toolbar(QtWidgets.QWidget):
         QtWidgets.QWidget.__init__(self)
         self.parent = parent
         self.graph = parent.graph
+        self.setMaximumWidth(100)
+        self.setMinimumWidth(100)
         lay = QtWidgets.QVBoxLayout()
-        self.addbtn = QtWidgets.QPushButton('add')
         # self.toolbtn = QtWidgets.QPushButton('tools')
-        self.setbtn = QtWidgets.QPushButton('settings')
-        self.addbtn = QtWidgets.QPushButton('add')
+        # self.setbtn = QtWidgets.QPushButton('settings')
+        self.addbtn = QtWidgets.QPushButton('Add Node')
         self.toolbtn = QtWidgets.QPushButton('tools')
         self.savebtn = QtWidgets.QPushButton('Save Graph')
         self.loadbtn = QtWidgets.QPushButton('Load Graph')
