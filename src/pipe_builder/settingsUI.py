@@ -85,11 +85,17 @@ class NodeSettingsBox(QtWidgets.QTabWidget):
         self.inputs_table.setColumnCount(7)
         self.inputs_table.setHorizontalHeaderLabels(['Name', 'Automation Level', 'Priority', 'Methodology', 'Duration',
                                                      'Frequency', 'Number People Effected'])
+        header = self.inputs_table.horizontalHeader()
+        # TODO - looks like my mac is pulling QT5 rather than QT4 - need to solve that.
+        # header.setResizeMode(QtGui.QHeaderView.ResizeToContents)
+        header.setStretchLastSection(True)
         self.outputs_table = QtWidgets.QTableWidget()
         self.outputs_table.setColumnCount(7)
         self.outputs_table.setHorizontalHeaderLabels(['Name', 'Automation Level', 'Priority', 'Methodology', 'Duration',
                                                      'Frequency', 'Number People Effected'])
+        self.outputs_table.horizontalHeader().setStretchLastSection(True)
         self.preflights_table = QtWidgets.QTableWidget()
+        self.preflights_table.horizontalHeader().setStretchLastSection(True)
         self.preflights_table.setColumnCount(4)
         self.preflights_table.setHorizontalHeaderLabels(['Name', 'Description', 'Required', 'Module'])
 
@@ -150,7 +156,6 @@ class NodeSettingsBox(QtWidgets.QTabWidget):
             self.preflights_table.setItem(i, 1, description)
             self.preflights_table.setItem(i, 2, required)
             self.preflights_table.setItem(i, 3, module)
-
 
     def populate_attrs(self):
         attrsData = self.parent.graph.scene().selectedItems()[0].attrsData
