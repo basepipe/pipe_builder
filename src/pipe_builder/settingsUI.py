@@ -1,4 +1,3 @@
-
 from Qt import QtWidgets, QtGui, QtCore
 
 
