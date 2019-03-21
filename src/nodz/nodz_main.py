@@ -1,9 +1,9 @@
 import os
 import pandas as pd
+import random
 from Qt import QtGui, QtCore, QtWidgets
 import nodz_utils as utils
-from pipe_builder.inputUI import NameInputs
-
+from pipe_builder.inputUI import NameInputs, FileBrowserDialog
 
 defaultConfigPath = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'default_config.json')
 
@@ -57,6 +57,7 @@ class Nodz(QtWidgets.QGraphicsView):
         self.gridSnapToggle = False
         self._nodeSnap = False
         self.selectedNodes = None
+        self.filepath = None
 
         # Connections data.
         self.drawingConnection = False
@@ -316,6 +317,21 @@ class Nodz(QtWidgets.QGraphicsView):
 
         if event.key() == QtCore.Qt.Key_S:
             self._nodeSnap = True
+
+        if event.key() == QtCore.Qt.Key_N:
+            defaults = {'description': 'None', 'pipeID': random.randint(1, 1001), 'software': '',
+                        'other': 'Test', 'preflight_data': {}}
+            self.createNode(name='NewNode', preset='node_preset_1', position=None, **defaults)
+
+        if event.key() == QtCore.Qt.Key_S and event.modifiers() == QtCore.Qt.ControlModifier:
+            if self.filepath:
+                print 'Saving %s' % self.filepath
+                self.saveGraph(filePath=self.filepath)
+            else:
+                dialog = FileBrowserDialog('Save Pipeline Graph', 'save')
+                dialog.exec_()
+                self.saveGraph(filePath=dialog.selectedFiles()[0])
+                self.signal_GraphSaved.emit(dialog.selectedFiles()[0])
 
         # Emit signal.
         self.signal_KeyPressed.emit(event.key())

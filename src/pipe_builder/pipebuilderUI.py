@@ -24,9 +24,10 @@ STYLESHEET = openStylesheet()
 class PipeBuilder(QtWidgets.QDialog):
     def __init__(self):
         QtWidgets.QDialog.__init__(self)
-
-        self.setWindowTitle('New Data Mapping Session - Not Saved')
+        self.title = 'New Data Mapping Session - Not Saved'
+        self.setWindowTitle(self.title)
         self.graph = nodz.Nodz(None)
+        self.graph.filepath = None
         # nodz.loadConfig(filePath='')
 
         self.graph.initialize()
@@ -60,6 +61,12 @@ class PipeBuilder(QtWidgets.QDialog):
 
         self.settingWidgets.signal_nothing_selected.connect(self.on_select_nothing)
         self.settingWidgets.signal_something_selected.connect(self.on_select_item)
+        self.toolbar.filename_changed.connect(self.on_filename_changed)
+
+    def on_filename_changed(self, data):
+        self.title = data
+        self.graph.filepath = data
+        self.setWindowTitle(data)
 
     def on_select_nothing(self):
         self.scroll.hide()
@@ -131,13 +138,12 @@ class PipeBuilder(QtWidgets.QDialog):
     # Graph
     @QtCore.Slot()
     def on_graphSaved(self, data):
-        self.setWindowTitle(data)
+        self.on_filename_changed(data)
         print 'graph saved !'
 
     @QtCore.Slot()
     def on_graphLoaded(self, data):
-        self.setWindowTitle(data)
-        print 'graph loaded !'
+        print 'graph %s loaded !' % data
 
     @QtCore.Slot()
     @staticmethod
