@@ -24,9 +24,10 @@ STYLESHEET = openStylesheet()
 class PipeBuilder(QtWidgets.QDialog):
     def __init__(self):
         QtWidgets.QDialog.__init__(self)
-
-        self.setWindowTitle('New Data Mapping Session - Not Saved')
+        self.title = 'New Data Mapping Session - Not Saved'
+        self.setWindowTitle(self.title)
         self.graph = nodz.Nodz(None)
+        self.graph.filepath = None
         # nodz.loadConfig(filePath='')
 
         self.graph.initialize()
@@ -42,14 +43,16 @@ class PipeBuilder(QtWidgets.QDialog):
         self.scroll.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.scroll.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.scroll.setWidgetResizable(True)
-        self.scroll.setMinimumHeight(240)
+        self.scroll.setMinimumWidth(330)
         # scroll.setFixedWidth(450)
-        self.splitter = QtWidgets.QSplitter(QtCore.Qt.Vertical)
+        self.splitter = QtWidgets.QSplitter(QtCore.Qt.Horizontal)
 
         self.scroll.setWidget(self.settingWidgets)
         self.toolbar = Toolbar(parent=self)
         # v_lay = QtWidgets.QVBoxLayout()
-        lay = QtWidgets.QHBoxLayout()
+        lay = QtWidgets.QVBoxLayout()
+        lay.setSpacing(1)
+        lay.setMargin(5)
 
         lay.addWidget(self.toolbar)
         self.splitter.addWidget(self.graph)
@@ -60,6 +63,12 @@ class PipeBuilder(QtWidgets.QDialog):
 
         self.settingWidgets.signal_nothing_selected.connect(self.on_select_nothing)
         self.settingWidgets.signal_something_selected.connect(self.on_select_item)
+        self.toolbar.filename_changed.connect(self.on_filename_changed)
+
+    def on_filename_changed(self, data):
+        self.title = data
+        self.graph.filepath = data
+        self.setWindowTitle(data)
 
     def on_select_nothing(self):
         self.scroll.hide()
@@ -131,13 +140,12 @@ class PipeBuilder(QtWidgets.QDialog):
     # Graph
     @QtCore.Slot()
     def on_graphSaved(self, data):
-        self.setWindowTitle(data)
+        self.on_filename_changed(data)
         print 'graph saved !'
 
     @QtCore.Slot()
     def on_graphLoaded(self, data):
-        self.setWindowTitle(data)
-        print 'graph loaded !'
+        print 'graph %s loaded !' % data
 
     @QtCore.Slot()
     @staticmethod
@@ -151,8 +159,11 @@ class PipeBuilder(QtWidgets.QDialog):
 
     # Other
     @QtCore.Slot(object)
-    def on_keyPressed(key):
-        print 'key pressed : ', key
+    def on_keyPressed(self, key):
+        if key == QtCore.Qt.Key_Space:
+            self.graph.block_disconnect = True
+        else:
+            self.graph.block_disconnect = False
 
     @QtCore.Slot(dict)
     def on_saveSettings(self, settings):

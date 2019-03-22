@@ -1,5 +1,5 @@
 
-from Qt import QtWidgets
+from Qt import QtWidgets, QtGui
 from functools import partial
 
 
@@ -29,8 +29,10 @@ class FileBrowserDialog(QtWidgets.QFileDialog):
         super(FileBrowserDialog, self).__init__()
         self.title = title
         self.setDirectory('/Users/tmikota/cg_lumberjack')
-        self.setFileMode(QtWidgets.QFileDialog.AnyFile)
+        #self.setFileMode(QtWidgets.QFileDialog.AnyFile)
+
         if type_ == 'open':
+            self.setNameFilter(("CGL Graphs (*.json)"))
             self.setAcceptMode(QtWidgets.QFileDialog.AcceptOpen)
         elif type_ == 'save':
             self.setAcceptMode(QtWidgets.QFileDialog.AcceptSave)

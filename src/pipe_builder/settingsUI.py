@@ -64,7 +64,6 @@ class NodeSettingsBox(QtWidgets.QTabWidget):
         self.tab_outputs = QtWidgets.QWidget()
         self.values = values
         self.setObjectName('NodeSettingsBox')
-        self.setMinimumHeight(800)
         self.parent = parent
         self.widget = QtWidgets.QWidget()
         self.lay_settings = QtWidgets.QVBoxLayout(self.tab_settings)
@@ -73,7 +72,7 @@ class NodeSettingsBox(QtWidgets.QTabWidget):
         self.lay_preflights = QtWidgets.QVBoxLayout(self.tab_preflights)
 
         self.addTab(self.tab_settings, 'Settings')
-        self.addTab(self.tab_attrs, 'Inputs/Outputs')
+        self.addTab(self.tab_attrs, 'Connections')
         self.addTab(self.tab_shelf, 'Shelf')
         self.addTab(self.tab_preflights, 'Preflights')
 
