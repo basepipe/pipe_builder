@@ -19,9 +19,7 @@ class Toolbar(QtWidgets.QWidget):
         QtWidgets.QWidget.__init__(self)
         self.parent = parent
         self.graph = parent.graph
-        self.setMaximumWidth(100)
-        self.setMinimumWidth(100)
-        lay = QtWidgets.QVBoxLayout()
+        lay = QtWidgets.QHBoxLayout()
         # self.toolbtn = QtWidgets.QPushButton('tools')
         # self.setbtn = QtWidgets.QPushButton('settings')
         self.addbtn = QtWidgets.QPushButton('Add Node')
@@ -46,7 +44,7 @@ class Toolbar(QtWidgets.QWidget):
         lay.addWidget(self.openbtn)
         # lay.addWidget(self.csvbtn)
         # lay.addWidget(self.pdfbtn)
-        lay.addItem(QtWidgets.QSpacerItem(0, 0, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding))
+        lay.addItem(QtWidgets.QSpacerItem(0, 0, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum))
         self.setLayout(lay)
 
     def graph_create_node(self):

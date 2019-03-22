@@ -43,14 +43,16 @@ class PipeBuilder(QtWidgets.QDialog):
         self.scroll.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.scroll.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.scroll.setWidgetResizable(True)
-        self.scroll.setMinimumHeight(240)
+        self.scroll.setMinimumWidth(330)
         # scroll.setFixedWidth(450)
-        self.splitter = QtWidgets.QSplitter(QtCore.Qt.Vertical)
+        self.splitter = QtWidgets.QSplitter(QtCore.Qt.Horizontal)
 
         self.scroll.setWidget(self.settingWidgets)
         self.toolbar = Toolbar(parent=self)
         # v_lay = QtWidgets.QVBoxLayout()
-        lay = QtWidgets.QHBoxLayout()
+        lay = QtWidgets.QVBoxLayout()
+        lay.setSpacing(1)
+        lay.setMargin(5)
 
         lay.addWidget(self.toolbar)
         self.splitter.addWidget(self.graph)
@@ -157,8 +159,11 @@ class PipeBuilder(QtWidgets.QDialog):
 
     # Other
     @QtCore.Slot(object)
-    def on_keyPressed(key):
-        print 'key pressed : ', key
+    def on_keyPressed(self, key):
+        if key == QtCore.Qt.Key_Space:
+            self.graph.block_disconnect = True
+        else:
+            self.graph.block_disconnect = False
 
     @QtCore.Slot(dict)
     def on_saveSettings(self, settings):

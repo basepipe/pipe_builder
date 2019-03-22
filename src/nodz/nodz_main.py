@@ -58,6 +58,7 @@ class Nodz(QtWidgets.QGraphicsView):
         self._nodeSnap = False
         self.selectedNodes = None
         self.filepath = None
+        self.block_disconnect = False
 
         # Connections data.
         self.drawingConnection = False
@@ -322,6 +323,15 @@ class Nodz(QtWidgets.QGraphicsView):
             defaults = {'description': 'None', 'pipeID': random.randint(1, 1001), 'software': '',
                         'other': 'Test', 'preflight_data': {}}
             self.createNode(name='NewNode', preset='node_preset_1', position=None, **defaults)
+
+        if event.key() == QtCore.Qt.Key_I:
+
+            if self.scene().selectedItems():
+                print 'Creating Input for %s' % self.scene().selectedItems()[0]
+
+        if event.key() == QtCore.Qt.Key_O:
+            if self.scene().selectedItems():
+                print 'Creating Output for %s' % self.scene().selectedItems()[0]
 
         if event.key() == QtCore.Qt.Key_S and event.modifiers() == QtCore.Qt.ControlModifier:
             if self.filepath:
@@ -2173,15 +2183,19 @@ class PlugItem(SlotItem):
 
         """
         # Emit signal.
+
         nodzInst = self.scene().views()[0]
-        nodzInst.signal_PlugDisconnected.emit(connection.plugNode, connection.plugAttr, connection.socketNode, connection.socketAttr)
-        # Remove connected socket from plug
-        if connection.socketItem in self.connected_slots:
-            self.connected_slots.remove(connection.socketItem)
-            connection.socketItem.disconnect(connection)
-        # Remove connection
-        if connection in self.connections:
-            self.connections.remove(connection)
+        if not nodzInst.block_disconnect:
+            nodzInst.signal_PlugDisconnected.emit(connection.plugNode, connection.plugAttr, connection.socketNode, connection.socketAttr)
+            # Remove connected socket from plug
+            if connection.socketItem in self.connected_slots:
+                self.connected_slots.remove(connection.socketItem)
+                connection.socketItem.disconnect(connection)
+            # Remove connection
+            if connection in self.connections:
+                self.connections.remove(connection)
+        else:
+            print 'No disconnection of plug while space is held'
 
 
 class SocketItem(SlotItem):
@@ -2280,15 +2294,19 @@ class SocketItem(SlotItem):
         Disconnect the given connection from this socket item.
 
         """
-        # Emit signal.
+            # Emit signal.
         nodzInst = self.scene().views()[0]
-        nodzInst.signal_SocketDisconnected.emit(connection.plugNode, connection.plugAttr, connection.socketNode, connection.socketAttr)
-        # Remove connected plugs
-        if connection.plugItem in self.connected_slots:
-            self.connected_slots.remove(connection.plugItem)
-        # Remove connections
-        if connection in self.connections:
-            self.connections.remove(connection)
+        if not nodzInst.block_disconnect:
+            nodzInst.signal_SocketDisconnected.emit(connection.plugNode, connection.plugAttr, connection.socketNode, connection.socketAttr)
+            # Remove connected plugs
+            if connection.plugItem in self.connected_slots:
+                self.connected_slots.remove(connection.plugItem)
+            # Remove connections
+            if connection in self.connections:
+                self.connections.remove(connection)
+        else:
+            print 'No Disconnect of socket while space is held'
+
 
 class SocketAdd(SocketItem):
     def __init__(self, parent, attribute, index, preset, dataType, maxConnections):
@@ -2341,6 +2359,7 @@ class SocketAdd(SocketItem):
         # Emit signal.
         nodzInst = self.scene().views()[0]
         nodzInst.signal_SocketConnected.emit(connection.plugNode, connection.plugAttr, connection.socketNode, connection.socketAttr)
+
 
 class PlugAdd(PlugItem):
     def __init__(self, parent, attribute, index, preset, dataType, maxConnections):
@@ -2538,18 +2557,20 @@ class ConnectionItem(QtWidgets.QGraphicsItemGroup):
 
         """
         nodzInst = self.scene().views()[0]
+        if not nodzInst.block_disconnect:
+            for item in nodzInst.scene().items():
+                if isinstance(item, ConnectionItem):
+                    item.setZValue(0)
 
-        for item in nodzInst.scene().items():
-            if isinstance(item, ConnectionItem):
-                item.setZValue(0)
+            nodzInst.drawingConnection = True
 
-        nodzInst.drawingConnection = True
+            d_to_target = (event.pos() - self.target_point).manhattanLength()
+            d_to_source = (event.pos() - self.source_point).manhattanLength()
 
-        d_to_target = (event.pos() - self.target_point).manhattanLength()
-        d_to_source = (event.pos() - self.source_point).manhattanLength()
+            if event.button() == QtCore.Qt.RightButton:
+                self._remove()
 
-        if event.button() == QtCore.Qt.RightButton:
-            self._remove()
+            self.updatePath()
 
         # if d_to_target < d_to_source:
         #     self.target_point = event.pos()
@@ -2568,7 +2589,7 @@ class ConnectionItem(QtWidgets.QGraphicsItemGroup):
         #     nodzInst.sourceSlot = self.target
 
 
-        self.updatePath()
+
 
     def mouseMoveEvent(self, event):
         """
@@ -2576,29 +2597,30 @@ class ConnectionItem(QtWidgets.QGraphicsItemGroup):
 
         """
         nodzInst = self.scene().views()[0]
-        config = nodzInst.config
+        if not nodzInst.block_disconnect:
+            config = nodzInst.config
+            mbb = utils._createPointerBoundingBox(pointerPos=event.scenePos().toPoint(),
+                                                  bbSize=config['mouse_bounding_box'])
 
-        mbb = utils._createPointerBoundingBox(pointerPos=event.scenePos().toPoint(),
-                                              bbSize=config['mouse_bounding_box'])
+            # Get nodes in pointer's bounding box.
+            targets = self.scene().items(mbb)
 
-        # Get nodes in pointer's bounding box.
-        targets = self.scene().items(mbb)
+            if any(isinstance(target, NodeItem) for target in targets):
 
-        if any(isinstance(target, NodeItem) for target in targets):
+                if nodzInst.sourceSlot.parentItem() not in targets:
+                    for target in targets:
+                        if isinstance(target, NodeItem):
+                            nodzInst.currentHoveredNode = target
+            else:
+                nodzInst.currentHoveredNode = None
 
-            if nodzInst.sourceSlot.parentItem() not in targets:
-                for target in targets:
-                    if isinstance(target, NodeItem):
-                        nodzInst.currentHoveredNode = target
-        else:
-            nodzInst.currentHoveredNode = None
+            if self.movable_point == 'target_point':
+                self.target_point = event.pos()
+            else:
+                self.source_point = event.pos()
 
-        if self.movable_point == 'target_point':
-            self.target_point = event.pos()
-        else:
-            self.source_point = event.pos()
+            self.updatePath()
 
-        self.updatePath()
 
     def mouseReleaseEvent(self, event):
         """
@@ -2606,44 +2628,45 @@ class ConnectionItem(QtWidgets.QGraphicsItemGroup):
 
         """
         nodzInst = self.scene().views()[0]
-        nodzInst.drawingConnection = False
+        if not nodzInst.block_disconnect:
+            nodzInst.drawingConnection = False
 
-        slot = self.scene().itemAt(event.scenePos().toPoint(), QtGui.QTransform())
+            slot = self.scene().itemAt(event.scenePos().toPoint(), QtGui.QTransform())
 
-        if not isinstance(slot, SlotItem):
-            self._remove()
-            self.updatePath()
-            super(ConnectionItem, self).mouseReleaseEvent(event)
-            return
-
-        if self.movable_point == 'target_point':
-            if slot.accepts(self.source):
-                # Plug reconnection.
-                self.target = slot
-                self.target_point = slot.center()
-                plug = self.source
-                socket = self.target
-
-                # Reconnect.
-                socket.connect(plug, self)
-
-                self.target_point = socket.center()
-
-            else:
+            if not isinstance(slot, SlotItem):
                 self._remove()
-
-        else:
-            if slot.accepts(self.target):
-                # Socket Reconnection
-                self.source = slot
-                self.source_point = slot.center()
-                socket = self.target
-                plug = self.source
-
-                # Reconnect.
-                plug.connect(socket, self)
-
                 self.updatePath()
+                super(ConnectionItem, self).mouseReleaseEvent(event)
+                return
+
+            if self.movable_point == 'target_point':
+                if slot.accepts(self.source):
+                    # Plug reconnection.
+                    self.target = slot
+                    self.target_point = slot.center()
+                    plug = self.source
+                    socket = self.target
+
+                    # Reconnect.
+                    socket.connect(plug, self)
+
+                    self.target_point = socket.center()
+
+                else:
+                    self._remove()
 
             else:
-                self._remove()
+                if slot.accepts(self.target):
+                    # Socket Reconnection
+                    self.source = slot
+                    self.source_point = slot.center()
+                    socket = self.target
+                    plug = self.source
+
+                    # Reconnect.
+                    plug.connect(socket, self)
+
+                    self.updatePath()
+
+                else:
+                    self._remove()
