@@ -319,6 +319,9 @@ class Nodz(QtWidgets.QGraphicsView):
         if event.key() == QtCore.Qt.Key_S:
             self._nodeSnap = True
 
+        if event.key() == QtCore.Qt.Key_G:
+            self.createGroup()
+
         if event.key() == QtCore.Qt.Key_N:
             defaults = {'description': 'None', 'pipeID': random.randint(1, 1001), 'software': '',
                         'other': 'Test', 'preflight_data': {}}
@@ -517,7 +520,32 @@ class Nodz(QtWidgets.QGraphicsView):
         # Connect signals.
         self.scene().selectionChanged.connect(self._returnSelection)
 
+    def createGroup(self, name='Group', preset='node_default', position=None, alternate=True, **kwargs):
+        namecache = name
+        count = 0
+        while name in self.scene().nodes.keys():
+            name = '%s_%s' % (namecache, count)
+            count += 1
+        nodeItem = NodeGroup(name=name, alternate=alternate, preset=preset,
+                            config=self.config, **kwargs)
+        self.scene().nodes[name] = nodeItem
+        if not position:
+            # Get the center of the view.
+            position = self.mapToScene(self.viewport().rect().center())
 
+        # Set node position.
+        self.scene().addItem(nodeItem)
+        nodeItem.setPos(position - nodeItem.nodeCenter)
+
+        # socket and plugs for adding attributes
+
+        # Emit signal.
+        self.signal_NodeCreated.emit(name)
+        self.addDefaultSockets(nodeItem)
+        nodeItem.populate(self.scene().selectedItems())
+        for i in self.scene().selectedItems():
+            self.removeItem(i)
+        return nodeItem
     # NODES
     def createNode(self, name='default', preset='node_default', position=None, alternate=True, **kwargs):
         """
@@ -2670,3 +2698,114 @@ class ConnectionItem(QtWidgets.QGraphicsItemGroup):
 
                 else:
                     self._remove()
+
+class NodeGroup(NodeItem):
+    def __init__(self, name, alternate, preset, config, **kwargs):
+        super(NodeGroup, self).__init__(name, alternate, preset, config, **kwargs)
+        self.collapsed = True
+        self.items = []
+        self.connections = []
+        self.oldPlugs = {}
+        self.oldSockets = {}
+        self.incoming = {}
+        self.outgoing = {}
+        self.newCon = []
+        self.description = "Group Node"
+
+    def populate(self, selection):
+        for i in selection:
+            self.items.append(i)
+            print i
+        for i in self.items:
+            for p in i.plugs.keys():
+                for con in i.plugs[p].connections:
+                    if con not in self.connections:
+                        self.connections.append(con)
+                    if not con.socketItem or con.socketItem.parent not in self.items:
+                        self.oldPlugs[p] = i.plugs[p]
+                        self.outgoing[p] = con
+            for s in i.sockets.keys():
+                for con in i.sockets[s].connections:
+                    if con not in self.connections:
+                        self.connections.append(con)
+                    if not con.plugItem or con.plugItem.parent not in self.items:
+                        self.oldSockets[s] = i.sockets[s]
+                        self.incoming[s] = con
+
+
+
+        for s in self.outgoing.keys():
+            c = self.outgoing[s]
+            i = c.plugItem.parent
+            self._createAttribute(s, self.attrCount, i.attrsData[s]['preset'], i.attrsData[s]['plug'],
+                                  i.attrsData[s]['socket'], i.attrsData[s]['dataType'],
+                                  i.attrsData[s]['plugMaxConnections'],
+                                  i.attrsData[s]['socketMaxConnections'],
+                                  i.attrsData[s]['automation_level'],
+                                  i.attrsData[s]['priority'], i.attrsData[s]['methodology'],i.attrsData[s]['duration'],
+                                       i.attrsData[s]['frequency'], i.attrsData[s]['number_effected'])
+
+            self.newCon.append(ConnectionItem(c.socketItem.center(), self.plugs[s].center(), c.socketItem, self.plugs[s]))
+            c.socketItem.connections.append(self.newCon[-1])
+
+        for p in self.incoming.keys():
+            c = self.incoming[p]
+            i = c.socketItem.parent
+            self._createAttribute(p, self.attrCount, i.attrsData[p]['preset'], i.attrsData[p]['plug'],
+                                  i.attrsData[p]['socket'], i.attrsData[p]['dataType'],
+                                  i.attrsData[p]['plugMaxConnections'],
+                                  i.attrsData[p]['socketMaxConnections'],
+                                  i.attrsData[p]['automation_level'],
+                                  i.attrsData[p]['priority'], i.attrsData[p]['methodology'],i.attrsData[p]['duration'],
+                                       i.attrsData[p]['frequency'], i.attrsData[p]['number_effected'])
+
+            self.newCon.append(ConnectionItem(self.sockets[p].center(), c.plugItem.center(), self.sockets[p], c.plugItem))
+            c.plugItem.connections.append(self.newCon[-1])
+
+        self.collapse()
+        self.collapsed = True
+
+    def _remove(self):
+        for i in self.newCon:
+            i._remove()
+
+        self.scene().removeItem(self)
+
+        # self.scene().update()
+
+    def expand(self):
+        for c in self.connections:
+            self.scene().addItem(c)
+
+        for con in self.outgoing.values():
+            con.socketItem.connections.append(con)
+        for con in self.incoming.values():
+            con.plugItem.connections.append(con)
+
+        for i in self.items:
+            self.scene().addItem(i)
+
+        self.scene().update()
+
+    def collapse(self):
+        for c in self.connections:
+            self.scene().removeItem(c)
+
+        for c in self.incoming.values():
+            c.plugItem.connections.remove(c)
+        for c in self.outgoing.values():
+            c.socketItem.connections.remove(c)
+
+
+        for i in self.items:
+            self.scene().removeItem(i)
+
+        self.scene().update()
+
+    def mousePressEvent(self, event):
+        if event.button() == QtCore.Qt.RightButton:
+            if self.collapsed:
+                self.expand()
+            else:
+                self.collapse()
+            self.collapsed = not self.collapsed

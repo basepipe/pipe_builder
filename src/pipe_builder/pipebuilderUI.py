@@ -52,7 +52,7 @@ class PipeBuilder(QtWidgets.QDialog):
         # v_lay = QtWidgets.QVBoxLayout()
         lay = QtWidgets.QVBoxLayout()
         lay.setSpacing(1)
-        lay.setMargin(5)
+        # lay.setMargin(5)
 
         lay.addWidget(self.toolbar)
         self.splitter.addWidget(self.graph)
