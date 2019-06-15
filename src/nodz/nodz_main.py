@@ -2732,8 +2732,6 @@ class NodeGroup(NodeItem):
                         self.oldSockets[s] = i.sockets[s]
                         self.incoming[s] = con
 
-
-
         for s in self.outgoing.keys():
             c = self.outgoing[s]
             i = c.plugItem.parent
@@ -2771,8 +2769,6 @@ class NodeGroup(NodeItem):
 
         self.scene().removeItem(self)
 
-        # self.scene().update()
-
     def expand(self):
         for c in self.connections:
             self.scene().addItem(c)
@@ -2795,7 +2791,6 @@ class NodeGroup(NodeItem):
             c.plugItem.connections.remove(c)
         for c in self.outgoing.values():
             c.socketItem.connections.remove(c)
-
 
         for i in self.items:
             self.scene().removeItem(i)
