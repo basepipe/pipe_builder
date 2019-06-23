@@ -2571,6 +2571,8 @@ class ConnectionItem(QtWidgets.QGraphicsItemGroup):
         self.update()
 
     def _remove(self):
+        print self.source
+        print self.target
         if self.source is not None:
             self.source.disconnect(self)
         if self.target is not None:
@@ -2705,8 +2707,6 @@ class NodeGroup(NodeItem):
         self.collapsed = True
         self.items = []
         self.connections = []
-        self.oldPlugs = {}
-        self.oldSockets = {}
         self.incoming = {}
         self.outgoing = {}
         self.newCon = []
@@ -2722,18 +2722,18 @@ class NodeGroup(NodeItem):
                     if con not in self.connections:
                         self.connections.append(con)
                     if not con.socketItem or con.socketItem.parent not in self.items:
-                        self.oldPlugs[p] = i.plugs[p]
                         self.outgoing[p] = con
             for s in i.sockets.keys():
                 for con in i.sockets[s].connections:
                     if con not in self.connections:
                         self.connections.append(con)
                     if not con.plugItem or con.plugItem.parent not in self.items:
-                        self.oldSockets[s] = i.sockets[s]
                         self.incoming[s] = con
 
         for s in self.outgoing.keys():
             c = self.outgoing[s]
+            print c
+            print c.plugItem
             i = c.plugItem.parent
             self._createAttribute(s, self.attrCount, i.attrsData[s]['preset'], i.attrsData[s]['plug'],
                                   i.attrsData[s]['socket'], i.attrsData[s]['dataType'],
@@ -2744,10 +2744,14 @@ class NodeGroup(NodeItem):
                                        i.attrsData[s]['frequency'], i.attrsData[s]['number_effected'])
 
             self.newCon.append(ConnectionItem(c.socketItem.center(), self.plugs[s].center(), c.socketItem, self.plugs[s]))
+            self.newCon[-1].socketItem = c.socketItem
+            self.newCon[-1].plugItem = self.plugs[s]
             c.socketItem.connections.append(self.newCon[-1])
 
         for p in self.incoming.keys():
             c = self.incoming[p]
+            print c
+            print c.socketItem
             i = c.socketItem.parent
             self._createAttribute(p, self.attrCount, i.attrsData[p]['preset'], i.attrsData[p]['plug'],
                                   i.attrsData[p]['socket'], i.attrsData[p]['dataType'],
@@ -2758,6 +2762,8 @@ class NodeGroup(NodeItem):
                                        i.attrsData[p]['frequency'], i.attrsData[p]['number_effected'])
 
             self.newCon.append(ConnectionItem(self.sockets[p].center(), c.plugItem.center(), self.sockets[p], c.plugItem))
+            self.newCon[-1].socketItem = self.sockets[p]
+            self.newCon[-1].plugItem = c.plugItem
             c.plugItem.connections.append(self.newCon[-1])
 
         self.collapse()
@@ -2765,21 +2771,31 @@ class NodeGroup(NodeItem):
 
     def _remove(self):
         for i in self.newCon:
-            i._remove()
+            rSafe = True
+            print i.plugItem
+            print i.socketItem
+            if i.plugItem not in self.scene().items() or i.socketItem not in self.scene().items():
+                rSafe = False
+            if rSafe:
+                i._remove()
 
         self.scene().removeItem(self)
 
     def expand(self):
+        for i in self.items:
+            self.scene().addItem(i)
+
         for c in self.connections:
-            self.scene().addItem(c)
+            rSafe = True
+            if c.plugItem not in self.scene().items() or c.socketItem not in self.scene().items():
+                rSafe = False
+            if rSafe:
+                self.scene().addItem(c)
 
         for con in self.outgoing.values():
             con.socketItem.connections.append(con)
         for con in self.incoming.values():
             con.plugItem.connections.append(con)
-
-        for i in self.items:
-            self.scene().addItem(i)
 
         self.scene().update()
 
@@ -2788,12 +2804,15 @@ class NodeGroup(NodeItem):
             self.scene().removeItem(c)
 
         for c in self.incoming.values():
-            c.plugItem.connections.remove(c)
+            if c in self.scene().items():
+                c.plugItem.connections.remove(c)
         for c in self.outgoing.values():
-            c.socketItem.connections.remove(c)
+            if c in self.scene().items():
+                c.socketItem.connections.remove(c)
 
         for i in self.items:
-            self.scene().removeItem(i)
+            if i in self.scene().items():
+                self.scene().removeItem(i)
 
         self.scene().update()
 
