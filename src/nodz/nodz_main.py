@@ -2716,6 +2716,9 @@ class NodeGroup(NodeItem):
         for i in selection:
             self.items.append(i)
             print i
+
+        self.setPos(min([i.scenePos() for i in self.items]))
+
         for i in self.items:
             for p in i.plugs.keys():
                 for con in i.plugs[p].connections:
@@ -2768,6 +2771,8 @@ class NodeGroup(NodeItem):
 
         self.collapse()
         self.collapsed = True
+
+        self.scene().updateScene()
 
     def _remove(self):
         for i in self.newCon:
