@@ -175,8 +175,6 @@ class NodeSettingsBox(QtWidgets.QTabWidget):
                 inputs += 1
         self.outputs_table.setRowCount(outputs)
         self.inputs_table.setRowCount(inputs)
-        print 2222222222222222
-        print attrsData
         for attr_name in attrsData:
             name = QtWidgets.QTableWidgetItem(str(attr_name))
             pretty_name = QtWidgets.QTableWidgetItem(str(attrsData[attr_name]['pretty_name']))

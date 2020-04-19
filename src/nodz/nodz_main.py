@@ -1595,9 +1595,9 @@ class NodeItem(QtWidgets.QGraphicsItem):
                 plug.connections[0]._remove()
 
         # Remove node.
-        scene = self.scene()
-        scene.removeItem(self)
-        scene.update()
+        #scene = self.scene()
+        #scene.removeItem(self)
+        #scene.update()
 
     def boundingRect(self):
         """
@@ -2084,6 +2084,7 @@ class SlotItem(QtWidgets.QGraphicsItem):
                 name_, pretty_name = dialog.return_output()
             else:
                 name_ = self.captured_output_name
+                pretty_name = name_
 
             if name_:
                 newAttr = nodzInst.createAttribute(node=nodeSocket.parent, name=name_,
@@ -2608,9 +2609,15 @@ class ConnectionItem(QtWidgets.QGraphicsItemGroup):
         self.update()
 
     def _remove(self):
+        """
+        removes a connection from the source and target node.
+        :return:
+        """
         if self.source is not None:
+            print 'source:', self.source
             self.source.disconnect(self)
         if self.target is not None:
+            print 'target:', self.target
             self.target.disconnect(self)
 
         self.sc.removeItem(self)
