@@ -79,7 +79,7 @@ class PipeBuilder(QtWidgets.QDialog):
     @staticmethod
     def fix_name(name_):
         # replace spaces with _
-        fixed_name = name_.replace(' ', '_')
+        fixed_name = name_.replace(' ', '_').replace('.', '_').lower()
         return fixed_name
 
     # Nodes
@@ -103,7 +103,7 @@ class PipeBuilder(QtWidgets.QDialog):
 
     @QtCore.Slot(str)
     def on_nodeSelected(self, nodesName):
-        print 'node selected : ', nodesName
+        # print 'node selected : ', nodesName
         all_info = self.query_selected_node_info()
         print 'ALL_INFO', all_info
         self.settingWidgets.refresh(settingData=all_info)
@@ -121,7 +121,7 @@ class PipeBuilder(QtWidgets.QDialog):
     # Attrs
     @QtCore.Slot(str, int)
     def on_attrCreated(self, nodeName, attrId):
-        print 'attr created : {0} at index : {1}'.format(nodeName, attrId)
+        # print 'attr created : {0} at index : {1}'.format(nodeName, attrId)
         self.on_nodeSelected(nodeName)
 
     @QtCore.Slot(str, int)

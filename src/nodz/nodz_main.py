@@ -332,9 +332,9 @@ class Nodz(QtWidgets.QGraphicsView):
             if dialog.button == 'Ok':
                 defaults = {'description': dialog.description_text_box.toPlainText(),
                             'pipeID': random.randint(1, 1001),
-                            'software': dialog.software_line_edit.text().replace(' ', '_'),
+                            'software': dialog.software_line_edit.text().replace(' ', '_').replace('.', '_'),
                             'other': 'Test', 'preflight_data': {}}
-                self.createNode(name=dialog.name_line_edit.text().replace(' ', '_'),
+                self.createNode(name=dialog.name_line_edit.text().replace(' ', '_').replace('.', '_'),
                                 preset='node_preset_1',
                                 position=None,
                                 **defaults)
@@ -696,10 +696,10 @@ class Nodz(QtWidgets.QGraphicsView):
         self.signal_NodeEdited.emit(oldName, newName)
 
     # ATTRS
-    def createAttribute(self, node, name='default', index=-1, preset='attr_default', plug=True, socket=True,
+    def createAttribute(self, node, name='default', pretty_name='default', index=-1, preset='attr_default', plug=True, socket=True,
                         dataType=None, plugMaxConnections=-1, socketMaxConnections=1, automation_level='Manual',
                         priority='Low', methodology='Artist Driven', duration=None, frequency=None,
-                        number_effected=None,):
+                        number_effected=None):
 
         """
         Create a new attribute with a given name.
@@ -748,12 +748,16 @@ class Nodz(QtWidgets.QGraphicsView):
             name = '%s_%s' % (name, count)
             count += 1
 
-        spInst = node._createAttribute(name=name, index=index, preset=preset, plug=plug, socket=socket,
+        print "%s is %s long, baseWidth is %s" % (name, len(name), node.baseWidth)
+
+        spInst = node._createAttribute(name=name, pretty_name=pretty_name, index=index, preset=preset, plug=plug, socket=socket,
                                        dataType=dataType, plugMaxConnections=plugMaxConnections,
                                        socketMaxConnections=socketMaxConnections, automation_level=automation_level,
                                        priority=priority, methodology=methodology, duration=duration,
                                        frequency=frequency, number_effected=number_effected)
-
+        new_width = len(name) * 30
+        if new_width > node.baseWidth:
+            node.baseWidth = new_width
         # Emit signal.
         self.signal_AttrCreated.emit(node.name, index)
 
@@ -980,6 +984,10 @@ class Nodz(QtWidgets.QGraphicsView):
             for attrData in attrsData:
                 index = attrsData.index(attrData)
                 name = attrData['name']
+                try:
+                    pretty_name = attrData['pretty_name']
+                except KeyError:
+                    pretty_name = attrData['name']
                 plug = attrData['plug']
                 socket = attrData['socket']
                 preset = attrData['preset']
@@ -1008,6 +1016,7 @@ class Nodz(QtWidgets.QGraphicsView):
 
                 self.createAttribute(node=node,
                                      name=name,
+                                     pretty_name=pretty_name,
                                      index=index,
                                      preset=preset,
                                      plug=plug,
@@ -1117,12 +1126,12 @@ class Nodz(QtWidgets.QGraphicsView):
         try:
             plug = self.scene().nodes[sourceNode].plugs[sourceAttr]
         except KeyError:
-            print("Skipping connection creation due to missing %s" % sourceAttr)
+            print("Skipping source %s output connection creation due to missing attr: %s" % (sourceNode, sourceAttr))
             return
         try:
             socket = self.scene().nodes[targetNode].sockets[targetAttr]
         except KeyError:
-            print("Skipping connection creation due to missing %s" % sourceAttr)
+            print("Skipping target %s input connection creation due to missing attr: %s" % (targetNode, sourceAttr))
             return
 
         connection = ConnectionItem(plug.center(), socket.center(), plug, socket)
@@ -1430,7 +1439,7 @@ class NodeItem(QtWidgets.QGraphicsItem):
 
 
 
-    def _createAttribute(self, name, index, preset, plug, socket, dataType, plugMaxConnections, socketMaxConnections,
+    def _createAttribute(self, name, pretty_name, index, preset, plug, socket, dataType, plugMaxConnections, socketMaxConnections,
                          automation_level, priority, methodology, duration, frequency, number_effected):
         """
         Create an attribute by expanding the node, adding a label and
@@ -1470,12 +1479,14 @@ class NodeItem(QtWidgets.QGraphicsItem):
         plugInst = None
         socketInst = None
         if plug:
+            print 'creating %s' % name, pretty_name
             plugInst = PlugItem(parent=self,
                                 attribute=name,
                                 index=self.attrCount,
                                 preset=preset,
                                 dataType=dataType,
-                                maxConnections=plugMaxConnections)
+                                maxConnections=plugMaxConnections,
+                                pretty_name=pretty_name)
 
             self.plugs[name] = plugInst
 
@@ -1487,7 +1498,8 @@ class NodeItem(QtWidgets.QGraphicsItem):
                                     index=self.attrCount,
                                     preset=preset,
                                     dataType=dataType,
-                                    maxConnections=socketMaxConnections)
+                                    maxConnections=socketMaxConnections,
+                                    pretty_name=pretty_name)
 
             self.sockets[name] = socketInst
 
@@ -1501,6 +1513,7 @@ class NodeItem(QtWidgets.QGraphicsItem):
 
         # Store attr data.
         self.attrsData[name] = {'name': name,
+                                'pretty_name': pretty_name,
                                 'socket': socket,
                                 'plug': plug,
                                 'preset': preset,
@@ -1823,7 +1836,7 @@ class SlotItem(QtWidgets.QGraphicsItem):
 
     """
 
-    def __init__(self, parent, attribute, preset, index, dataType, maxConnections):
+    def __init__(self, parent, attribute, preset, index, dataType, maxConnections, pretty_name=None):
         """
         Initialize the class.
 
@@ -2068,12 +2081,13 @@ class SlotItem(QtWidgets.QGraphicsItem):
                 dialog = NameInputs('Attribute Name')
                 #dialog.output.setText(self.captured_output_name)
                 dialog.exec_()
-                name_ = dialog.return_output()
+                name_, pretty_name = dialog.return_output()
             else:
                 name_ = self.captured_output_name
 
             if name_:
-                newAttr = nodzInst.createAttribute(node=nodeSocket.parent, name=name_, index=-1,
+                newAttr = nodzInst.createAttribute(node=nodeSocket.parent, name=name_,
+                                                   pretty_name=pretty_name, index=-1,
                                                    preset='attr_preset_1',
                                                    plug=startnode['Output'], socket=startnode['Input'], dataType=str,
                                                    plugMaxConnections=-1,
@@ -2140,7 +2154,7 @@ class PlugItem(SlotItem):
 
     """
 
-    def __init__(self, parent, attribute, index, preset, dataType, maxConnections):
+    def __init__(self, parent, attribute, index, preset, dataType, maxConnections, pretty_name=None):
         """
         Initialize the class.
 
@@ -2160,12 +2174,13 @@ class PlugItem(SlotItem):
         :type  dataType: Type.
 
         """
-        super(PlugItem, self).__init__(parent, attribute, preset, index, dataType, maxConnections)
+        super(PlugItem, self).__init__(parent, attribute, preset, index, dataType, maxConnections, pretty_name)
 
         # Storage.
         self.attributte = attribute
         self.preset = preset
         self.slotType = 'plug'
+        self.pretty_name = pretty_name
 
         self.parent = parent
 
@@ -2255,7 +2270,7 @@ class SocketItem(SlotItem):
 
     """
 
-    def __init__(self, parent, attribute, index, preset, dataType, maxConnections):
+    def __init__(self, parent, attribute, index, preset, dataType, maxConnections, pretty_name=None):
         """
         Initialize the socket.
 

@@ -54,9 +54,9 @@ class Toolbar(QtWidgets.QWidget):
         if dialog.button == 'Ok':
             defaults = {'description': dialog.description_text_box.toPlainText(),
                         'pipeID': random.randint(1, 1001),
-                        'software': dialog.software_line_edit.text().replace(' ', '_'),
+                        'software': dialog.software_line_edit.text().replace(' ', '_').replace('.', '_').lower(),
                         'other': 'Test', 'preflight_data': {}}
-            self.graph.createNode(name=dialog.name_line_edit.text().replace(' ', '_'),
+            self.graph.createNode(name=dialog.name_line_edit.text().replace(' ', '_').replace('.', '_').lower(),
                                   preset='node_preset_1',
                                   position=None,
                                   **defaults)

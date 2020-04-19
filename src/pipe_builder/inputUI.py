@@ -105,14 +105,16 @@ class NameInputs(QtWidgets.QDialog):
 
     # def on_name_edited(self):
     #     name_ = self.output.text()
-    #     fixed_name = name_.replace(' ', '_')
+    #     fixed_name = name_.replace(' ', '_').replace('.', '_')
     #     self.output.setText(fixed_name)
     #     # TODO - this needs to be smarter - there has to be a way to get the last position and set it there.
     #     # self.output.setCursorPosition(100)
     #     return fixed_name
 
     def return_output(self):
-        return self.output.text().replace(' ', '_')
+        name_ = self.output.text().replace(' ', '_').replace('.', '_').lower()
+        pretty_name = self.output.text()
+        return name_, pretty_name
 
 
 class FileBrowserDialog(QtWidgets.QFileDialog):
