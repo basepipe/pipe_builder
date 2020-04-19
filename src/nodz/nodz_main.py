@@ -4,7 +4,7 @@ import random
 from Qt import QtGui, QtCore, QtWidgets
 import nodz_utils as utils
 import shutil
-from pipe_builder.inputUI import NameInputs, FileBrowserDialog
+from pipe_builder.inputUI import NameInputs, FileBrowserDialog, CreateNodeDialog
 
 defaultConfigPath = os.path.join(os.path.expanduser('~\\Documents'), 'cglumberjack', 'default_config.json')
 if not os.path.exists(defaultConfigPath):
@@ -327,9 +327,17 @@ class Nodz(QtWidgets.QGraphicsView):
             self.createGroup()
 
         if event.key() == QtCore.Qt.Key_N:
-            defaults = {'description': 'None', 'pipeID': random.randint(1, 1001), 'software': '',
-                        'other': 'Test', 'preflight_data': {}}
-            self.createNode(name='NewNode', preset='node_preset_1', position=None, **defaults)
+            dialog = CreateNodeDialog()
+            dialog.exec_()
+            if dialog.button == 'Ok':
+                defaults = {'description': dialog.description_text_box.toPlainText(),
+                            'pipeID': random.randint(1, 1001),
+                            'software': dialog.software_line_edit.text().replace(' ', '_'),
+                            'other': 'Test', 'preflight_data': {}}
+                self.createNode(name=dialog.name_line_edit.text().replace(' ', '_'),
+                                preset='node_preset_1',
+                                position=None,
+                                **defaults)
 
         if event.key() == QtCore.Qt.Key_I:
 
@@ -342,8 +350,9 @@ class Nodz(QtWidgets.QGraphicsView):
 
         if event.key() == QtCore.Qt.Key_S and event.modifiers() == QtCore.Qt.ControlModifier:
             if self.filepath:
-                print 'Saving %s' % self.filepath
+                # TODO - this messes up the view for some reason.
                 self.saveGraph(filePath=self.filepath)
+                self.signal_GraphSaved.emit(self.filepath)
             else:
                 dialog = FileBrowserDialog('Save Pipeline Graph', 'save')
                 dialog.exec_()
@@ -923,7 +932,7 @@ class Nodz(QtWidgets.QGraphicsView):
         utils._saveData(filePath=jsonPath, data=data)
         self.signal_GraphSaved.emit(jsonPath)
         self.saveCSV(csvPath)
-        self.exportImage(jpgPath)
+        # self.exportImage(jpgPath)
 
     def loadGraph(self, filePath='path'):
         """
@@ -1075,6 +1084,7 @@ class Nodz(QtWidgets.QGraphicsView):
         self.csv.to_csv(path_or_buf=filePath, index=False)
 
     def exportImage(self, filePath=None):
+        # TODO - something we are doing in here causes the interface to lock when creating images.
         view = self.scene()
         size = view.itemsBoundingRect()
         size.setHeight(size.height()+30)
@@ -1082,7 +1092,7 @@ class Nodz(QtWidgets.QGraphicsView):
         view.setSceneRect(size)
         map_ = QtGui.QImage(view.sceneRect().size().toSize(), QtGui.QImage.Format_RGB32)
         painter = QtGui.QPainter(map_)
-        map_.fill(QtGui.QColor(0,0,0))
+        map_.fill(QtGui.QColor(0, 0, 0))
         view.render(painter)
         painter.end()
         map_.save(filePath, "jpg")
@@ -1104,8 +1114,16 @@ class Nodz(QtWidgets.QGraphicsView):
         :param targetAttr: Attribute that receives the connection.
 
         """
-        plug = self.scene().nodes[sourceNode].plugs[sourceAttr]
-        socket = self.scene().nodes[targetNode].sockets[targetAttr]
+        try:
+            plug = self.scene().nodes[sourceNode].plugs[sourceAttr]
+        except KeyError:
+            print("Skipping connection creation due to missing %s" % sourceAttr)
+            return
+        try:
+            socket = self.scene().nodes[targetNode].sockets[targetAttr]
+        except KeyError:
+            print("Skipping connection creation due to missing %s" % sourceAttr)
+            return
 
         connection = ConnectionItem(plug.center(), socket.center(), plug, socket)
 
@@ -1555,12 +1573,12 @@ class NodeItem(QtWidgets.QGraphicsItem):
 
         # Remove all sockets connections.
         for socket in self.sockets.values():
-            while len(socket.connections)>0:
+            while len(socket.connections) > 0:
                 socket.connections[0]._remove()
 
         # Remove all plugs connections.
         for plug in self.plugs.values():
-            while len(plug.connections)>0:
+            while len(plug.connections) > 0:
                 plug.connections[0]._remove()
 
         # Remove node.

@@ -239,6 +239,15 @@ class PipeBuilder(QtWidgets.QDialog):
 
         return all_info
 
+    def closeEvent(self, event):
+        if self.graph.filepath:
+            print 'Saving Graph to: %s' % self.graph.filepath
+            self.graph.saveGraph(filePath=self.graph.filepath)
+            print 'Saving Graph Image to: %s' % self.graph.filepath.replace('json', 'jpg')
+            self.graph.exportImage(filePath=self.graph.filepath.replace('json', 'jpg'))
+        else:
+            print 'No Filepath set, skipping save'
+
 
 if __name__ == '__main__':
     app = QtWidgets.QApplication([])
