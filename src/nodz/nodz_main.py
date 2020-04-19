@@ -1103,15 +1103,18 @@ class Nodz(QtWidgets.QGraphicsView):
         # TODO - something we are doing in here causes the interface to lock when creating images.
         view = self.scene()
         size = view.itemsBoundingRect()
-        size.setHeight(size.height()+30)
-        size.moveTop(size.topLeft().y()-30)
+        size.setHeight(size.height()+300)
+        size.setWidth(size.width()+300)
+        size.moveTop(size.topLeft().y()-150)
+        size.moveLeft(size.topLeft().x() - 150)
         view.setSceneRect(size)
         map_ = QtGui.QImage(view.sceneRect().size().toSize(), QtGui.QImage.Format_RGB32)
         painter = QtGui.QPainter(map_)
-        map_.fill(QtGui.QColor(0, 0, 0))
+        map_.fill(utils._convertDataToColor(self.config['bg_color']))
         view.render(painter)
         painter.end()
         map_.save(filePath, "jpg")
+        # see drawBackground if you want to actually draw the grid lines on the pdf.
 
     def createConnection(self, sourceNode, sourceAttr, targetNode, targetAttr):
         """
@@ -1320,7 +1323,7 @@ class NodeItem(QtWidgets.QGraphicsItem):
         super(NodeItem, self).__init__()
 
         self.setZValue(1)
-
+        self.config = config
         for arg, value in kwargs.iteritems():
             setattr(self, arg, value)
         if not self.software:
