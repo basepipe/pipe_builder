@@ -3,7 +3,6 @@ import random
 from inputUI import FileBrowserDialog, CreateNodeDialog
 
 
-
 class NavBar(QtWidgets.QWidget):
     def __init__(self):
         QtGui.QWidget.__init__(self)

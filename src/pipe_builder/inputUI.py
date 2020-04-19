@@ -57,7 +57,6 @@ class CreateNodeDialog(QtWidgets.QDialog):
             check_box.clicked.connect(self.on_software_checked)
             grid.addWidget(check_box, new_row, column)
             row += 1
-            print each, row, column
 
         layout.addLayout(grid)
         layout.addLayout(button_layout)

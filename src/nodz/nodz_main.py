@@ -461,13 +461,22 @@ class Nodz(QtWidgets.QGraphicsView):
         Delete selected nodes.
 
         """
-        selected_nodes = list()
-        for node in self.scene().selectedItems():
-            selected_nodes.append(node.name)
-            node._remove()
+        if self.filepath:
+            print self.filepath
+            selected_nodes = list()
+            for node in self.scene().selectedItems():
+                selected_nodes.append(node.name)
+                node._remove()
+            self.saveGraph(self.filepath)
+            self.clearGraph()
+            self.loadGraph(filePath=self.filepath)
+            # Emit signal.
+            self.signal_NodeDeleted.emit(selected_nodes)
+        else:
+            print 'Save File Before Deleting.'
 
-        # Emit signal.
-        self.signal_NodeDeleted.emit(selected_nodes)
+
+
 
     def _returnSelection(self):
         """
@@ -747,8 +756,6 @@ class Nodz(QtWidgets.QGraphicsView):
         while name in node.attrs:
             name = '%s_%s' % (name, count)
             count += 1
-
-        print "%s is %s long, baseWidth is %s" % (name, len(name), node.baseWidth)
 
         spInst = node._createAttribute(name=name, pretty_name=pretty_name, index=index, preset=preset, plug=plug, socket=socket,
                                        dataType=dataType, plugMaxConnections=plugMaxConnections,
@@ -1316,6 +1323,8 @@ class NodeItem(QtWidgets.QGraphicsItem):
 
         for arg, value in kwargs.iteritems():
             setattr(self, arg, value)
+        if not self.software:
+            self.software = 'No Software Defined'
         # Storage
         self.name = name
         self.alternate = alternate
@@ -1424,8 +1433,12 @@ class NodeItem(QtWidgets.QGraphicsItem):
         self._textPen = QtGui.QPen()
         self._textPen.setStyle(QtCore.Qt.SolidLine)
         self._textPen.setColor(utils._convertDataToColor(config[self.nodePreset]['text']))
+        self._softwareTextPen = QtGui.QPen()
+        self._softwareTextPen.setStyle(QtCore.Qt.SolidLine)
+        self._softwareTextPen.setColor(utils._convertDataToColor(config['software_default']['text']))
 
         self._nodeTextFont = QtGui.QFont(config['node_font'], config['node_font_size'], QtGui.QFont.Bold)
+        self._softwareTextFont = QtGui.QFont(config['software_font'], config['software_font_size'], QtGui.QFont.Bold)
         self._attrTextFont = QtGui.QFont(config['attr_font'], config['attr_font_size'], QtGui.QFont.Normal)
 
         self._attrBrush = QtGui.QBrush()
@@ -1635,20 +1648,34 @@ class NodeItem(QtWidgets.QGraphicsItem):
         # Node label.
         painter.setPen(self._textPen)
         painter.setFont(self._nodeTextFont)
-
         metrics = QtGui.QFontMetrics(painter.font())
-        text_width = metrics.boundingRect(self.name).width() + 14
-        text_height = metrics.boundingRect(self.name).height() + 14
+        if len(self.software) > len(self.name):
+            text_width = metrics.boundingRect(self.software).width() + 14
+        else:
+            text_width = metrics.boundingRect(self.name).width() + 24
+        if text_width > self.baseWidth:
+            self.baseWidth = text_width
+
+        text_height = metrics.boundingRect(self.software).height() + 24
         margin = (text_width - self.baseWidth) * 0.5
+        # margin = metrics.boundingRect(self.name).width() - 40
         textRect = QtCore.QRect(-margin,
                                 -text_height,
                                 text_width,
                                 text_height)
+        textRect2 = QtCore.QRect(-margin,
+                                 -text_height+45,
+                                 text_width,
+                                 text_height)
 
         painter.drawText(textRect,
                          QtCore.Qt.AlignCenter,
                          self.name)
-
+        painter.setPen(self._softwareTextPen)
+        painter.setFont(self._softwareTextFont)
+        painter.drawText(textRect2,
+                         QtCore.Qt.AlignCenter,
+                         self.software)
 
         # Attributes.
         offset = 0
@@ -1666,7 +1693,6 @@ class NodeItem(QtWidgets.QGraphicsItem):
 
             attrData = self.attrsData[attr]
             name = attr
-
             preset = attrData['preset']
 
 
@@ -1700,7 +1726,7 @@ class NodeItem(QtWidgets.QGraphicsItem):
                                      rect.top(),
                                      rect.width() - 2*self.radius,
                                      rect.height())
-            alignment =  QtCore.Qt.AlignLeft
+            alignment = QtCore.Qt.AlignLeft
             if attrData['plug']:
                 alignment = QtCore.Qt.AlignRight
             painter.drawText(textRect, alignment | QtCore.Qt.AlignVCenter, name)

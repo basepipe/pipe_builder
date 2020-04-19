@@ -12,6 +12,8 @@
     "attr_font": "Arial",
     "attr_font_size": 10,
     "mouse_bounding_box": 80,
+    "software_font": "Arial",
+    "software_font_size": 10,
 
     // Shapes > Edit values BUT do not delete.
     "node_width": 300,
@@ -33,6 +35,13 @@
         "border": [50, 50, 50, 255],
         "border_sel": [250, 250, 250, 255],
         "text": [255, 255, 255, 255]
+    },
+
+    "software_default": {
+        "bg": [130, 130, 130, 255],
+        "border": [50, 50, 50, 255],
+        "border_sel": [250, 250, 250, 255],
+        "text": [255, 155, 0, 255]
     },
 
     "attr_default": {
