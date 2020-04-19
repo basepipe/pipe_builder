@@ -14,7 +14,7 @@
     "mouse_bounding_box": 80,
 
     // Shapes > Edit values BUT do not delete.
-    "node_width": 200,
+    "node_width": 300,
     "node_height": 60,
     "node_radius": 10,
     "node_border": 2,

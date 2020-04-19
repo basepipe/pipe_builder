@@ -19,6 +19,8 @@ class NodeSettingWidget(QtWidgets.QWidget):
         # self.setMaximumHeight(740)
         self.setMinimumHeight(740)
         self.setLayout(self.lay)
+        self.node_settings_box = None
+
 
     def initialize(self):
         '''
@@ -28,26 +30,27 @@ class NodeSettingWidget(QtWidgets.QWidget):
 
         self.lay = QtWidgets.QVBoxLayout()
         self.lay.setAlignment(QtCore.Qt.AlignTop)
-        self.settingsbox = QtWidgets.QVBoxLayout()
-        self.lay.addLayout(self.settingsbox)
+        self.settings_box = QtWidgets.QVBoxLayout()
+        self.lay.addLayout(self.settings_box)
 
     def refresh(self, settingData):
         # clear out widget
         self.settings = settingData
         if self.settings:
             self.signal_something_selected.emit()
-            for i in reversed(range(self.settingsbox.count())):
-                self.settingsbox.itemAt(i).widget().setParent(None)
+            for i in reversed(range(self.settings_box.count())):
+                self.settings_box.itemAt(i).widget().setParent(None)
 
             # add default settings
             for settings in settingData:
-                self.settingsbox.addWidget(NodeSettingsBox(parent=self.parent, values=settings, save=self._savesettings))
+                self.node_settings_box = NodeSettingsBox(parent=self.parent, values=settings, save=self._savesettings)
+                self.settings_box.addWidget(self.node_settings_box)
         else:
             self.signal_nothing_selected.emit()
 
     def _savesettings(self):
-        for i in reversed(range(self.settingsbox.count())):
-            self.settingsbox.itemAt(i).widget()._save_properties()
+        for i in reversed(range(self.settings_box.count())):
+            self.settings_box.itemAt(i).widget()._save_properties()
         self.signal_SaveSettings.emit(self.settings)
 
 
@@ -70,6 +73,10 @@ class NodeSettingsBox(QtWidgets.QTabWidget):
         self.lay_attrs = QtWidgets.QVBoxLayout(self.tab_attrs)
         self.lay_shelf = QtWidgets.QVBoxLayout(self.tab_shelf)
         self.lay_preflights = QtWidgets.QVBoxLayout(self.tab_preflights)
+        self.attrs_dict = {'Settings': {},
+                           'Connections': {},
+                           'Shelf': {},
+                           'Preflights': {}}
 
         self.addTab(self.tab_settings, 'Settings')
         self.addTab(self.tab_attrs, 'Connections')
@@ -77,20 +84,20 @@ class NodeSettingsBox(QtWidgets.QTabWidget):
         self.addTab(self.tab_preflights, 'Preflights')
 
         # add node properties
+        header_items = ['Name', 'Automation Level', 'Priority', 'Methodology', 'Duration',
+                        'Frequency', 'Number People Effected', 'Pretty Name']
 
         # add the input table
         self.inputs_table = QtWidgets.QTableWidget()
-        self.inputs_table.setColumnCount(7)
-        self.inputs_table.setHorizontalHeaderLabels(['Name', 'Automation Level', 'Priority', 'Methodology', 'Duration',
-                                                     'Frequency', 'Number People Effected'])
+        self.inputs_table.setColumnCount(len(header_items))
+        self.inputs_table.setHorizontalHeaderLabels(header_items)
         header = self.inputs_table.horizontalHeader()
         # TODO - looks like my mac is pulling QT5 rather than QT4 - need to solve that.
         # header.setResizeMode(QtGui.QHeaderView.ResizeToContents)
         header.setStretchLastSection(True)
         self.outputs_table = QtWidgets.QTableWidget()
-        self.outputs_table.setColumnCount(7)
-        self.outputs_table.setHorizontalHeaderLabels(['Name', 'Automation Level', 'Priority', 'Methodology', 'Duration',
-                                                     'Frequency', 'Number People Effected'])
+        self.outputs_table.setColumnCount(len(header_items))
+        self.outputs_table.setHorizontalHeaderLabels(header_items)
         self.outputs_table.horizontalHeader().setStretchLastSection(True)
         self.preflights_table = QtWidgets.QTableWidget()
         self.preflights_table.horizontalHeader().setStretchLastSection(True)
@@ -168,9 +175,11 @@ class NodeSettingsBox(QtWidgets.QTabWidget):
                 inputs += 1
         self.outputs_table.setRowCount(outputs)
         self.inputs_table.setRowCount(inputs)
+        print 2222222222222222
+        print attrsData
         for attr_name in attrsData:
-            print attr_name
             name = QtWidgets.QTableWidgetItem(str(attr_name))
+            pretty_name = QtWidgets.QTableWidgetItem(str(attrsData[attr_name]['pretty_name']))
             automation_level = QtWidgets.QTableWidgetItem(str(attrsData[attr_name]['automation_level']))
             priority = QtWidgets.QTableWidgetItem(attrsData[attr_name]['priority'])
             methodology = QtWidgets.QTableWidgetItem(attrsData[attr_name]['methodology'])
@@ -192,6 +201,7 @@ class NodeSettingsBox(QtWidgets.QTabWidget):
             table.setItem(i, 4, duration)
             table.setItem(i, 5, frequency)
             table.setItem(i, 6, number_effected)
+            table.setItem(i, 7, pretty_name)
 
     def spawn_properties(self, values, save):
         for attr, val in values.iteritems():
@@ -201,6 +211,7 @@ class NodeSettingsBox(QtWidgets.QTabWidget):
                 pass
             else:
                 newproperty = SettingField(title=attr, value=str(val), save=save)
+                self.attrs_dict['Settings'][attr] = newproperty.textbox
                 self.lay_settings.addWidget(newproperty)
         self.lay_settings.addItem(QtWidgets.QSpacerItem(0, 0, QtWidgets.QSizePolicy.Minimum,
                          QtWidgets.QSizePolicy.Expanding))
@@ -210,6 +221,7 @@ class NodeSettingsBox(QtWidgets.QTabWidget):
         node = self.parent.graph.scene().selectedItems()[0]
         plugs = self.parent.graph.scene().selectedItems()[0].attrsData
         name = self.sender().item(item.row(), 0).text()
+
         if item.column() == 1:
             plugs[name]['automation_level'] = self.sender().item(item.row(), 1).text()
         elif item.column() == 2:
@@ -222,6 +234,8 @@ class NodeSettingsBox(QtWidgets.QTabWidget):
             plugs[name]['frequency'] = self.sender().item(item.row(), 5).text()
         elif item.column() == 6:
             plugs[name]['number_effected'] = self.sender().item(item.row(), 6).text()
+        elif item.column() == 7:
+            plugs[name]['pretty_name'] = self.sender().item(item.row(), 7).text()
         elif item.column() == 0:
             index_ = node.attrs.index(self.old_name)
             nodz.editAttribute(node=node, index=index_, newName=name,

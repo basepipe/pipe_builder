@@ -52,7 +52,7 @@ class PipeBuilder(QtWidgets.QDialog):
         # v_lay = QtWidgets.QVBoxLayout()
         lay = QtWidgets.QVBoxLayout()
         lay.setSpacing(1)
-        lay.setMargin(5)
+        # lay.setMargin(5)
 
         lay.addWidget(self.toolbar)
         self.splitter.addWidget(self.graph)
@@ -76,6 +76,12 @@ class PipeBuilder(QtWidgets.QDialog):
     def on_select_item(self):
         self.scroll.show()
 
+    @staticmethod
+    def fix_name(name_):
+        # replace spaces with _
+        fixed_name = name_.replace(' ', '_').replace('.', '_').lower()
+        return fixed_name
+
     # Nodes
     @QtCore.Slot(str)
     @staticmethod
@@ -88,13 +94,16 @@ class PipeBuilder(QtWidgets.QDialog):
         print 'node deleted : ', nodeName
 
     @QtCore.Slot(str, str)
-    @staticmethod
-    def on_nodeEdited(nodeName, newName):
-        print 'node edited : {0}, new name : {1}'.format(nodeName, newName)
+    def on_nodeEdited(self, nodeName, newName):
+        line_edit = self.settingWidgets.node_settings_box.attrs_dict['Settings']['name']
+        fixed_name = self.fix_name(newName)
+        line_edit.setText(fixed_name)
+        # line_edit.setCursorPosition(100)
+        print 'node edited : {0}, new name : {1}'.format(nodeName, fixed_name)
 
     @QtCore.Slot(str)
     def on_nodeSelected(self, nodesName):
-        print 'node selected : ', nodesName
+        # print 'node selected : ', nodesName
         all_info = self.query_selected_node_info()
         print 'ALL_INFO', all_info
         self.settingWidgets.refresh(settingData=all_info)
@@ -112,7 +121,7 @@ class PipeBuilder(QtWidgets.QDialog):
     # Attrs
     @QtCore.Slot(str, int)
     def on_attrCreated(self, nodeName, attrId):
-        print 'attr created : {0} at index : {1}'.format(nodeName, attrId)
+        # print 'attr created : {0} at index : {1}'.format(nodeName, attrId)
         self.on_nodeSelected(nodeName)
 
     @QtCore.Slot(str, int)
@@ -229,6 +238,15 @@ class PipeBuilder(QtWidgets.QDialog):
             all_info.append(node_settings)
 
         return all_info
+
+    def closeEvent(self, event):
+        if self.graph.filepath:
+            print 'Saving Graph to: %s' % self.graph.filepath
+            self.graph.saveGraph(filePath=self.graph.filepath)
+            print 'Saving Graph Image to: %s' % self.graph.filepath.replace('json', 'jpg')
+            self.graph.exportImage(filePath=self.graph.filepath.replace('json', 'jpg'))
+        else:
+            print 'No Filepath set, skipping save'
 
 
 if __name__ == '__main__':

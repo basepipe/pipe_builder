@@ -3,9 +3,13 @@ import pandas as pd
 import random
 from Qt import QtGui, QtCore, QtWidgets
 import nodz_utils as utils
-from pipe_builder.inputUI import NameInputs, FileBrowserDialog
+import shutil
+from pipe_builder.inputUI import NameInputs, FileBrowserDialog, CreateNodeDialog
 
-defaultConfigPath = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'default_config.json')
+defaultConfigPath = os.path.join(os.path.expanduser('~\\Documents'), 'cglumberjack', 'default_config.json')
+if not os.path.exists(defaultConfigPath):
+    shutil.copy2(os.path.join(os.path.dirname(__file__), 'default_config.json'),
+                 defaultConfigPath)
 
 
 class Nodz(QtWidgets.QGraphicsView):
@@ -319,10 +323,21 @@ class Nodz(QtWidgets.QGraphicsView):
         if event.key() == QtCore.Qt.Key_S:
             self._nodeSnap = True
 
+        if event.key() == QtCore.Qt.Key_G:
+            self.createGroup()
+
         if event.key() == QtCore.Qt.Key_N:
-            defaults = {'description': 'None', 'pipeID': random.randint(1, 1001), 'software': '',
-                        'other': 'Test', 'preflight_data': {}}
-            self.createNode(name='NewNode', preset='node_preset_1', position=None, **defaults)
+            dialog = CreateNodeDialog()
+            dialog.exec_()
+            if dialog.button == 'Ok':
+                defaults = {'description': dialog.description_text_box.toPlainText(),
+                            'pipeID': random.randint(1, 1001),
+                            'software': dialog.software_line_edit.text().replace(' ', '_').replace('.', '_'),
+                            'other': 'Test', 'preflight_data': {}}
+                self.createNode(name=dialog.name_line_edit.text().replace(' ', '_').replace('.', '_'),
+                                preset='node_preset_1',
+                                position=None,
+                                **defaults)
 
         if event.key() == QtCore.Qt.Key_I:
 
@@ -335,8 +350,9 @@ class Nodz(QtWidgets.QGraphicsView):
 
         if event.key() == QtCore.Qt.Key_S and event.modifiers() == QtCore.Qt.ControlModifier:
             if self.filepath:
-                print 'Saving %s' % self.filepath
+                # TODO - this messes up the view for some reason.
                 self.saveGraph(filePath=self.filepath)
+                self.signal_GraphSaved.emit(self.filepath)
             else:
                 dialog = FileBrowserDialog('Save Pipeline Graph', 'save')
                 dialog.exec_()
@@ -517,7 +533,32 @@ class Nodz(QtWidgets.QGraphicsView):
         # Connect signals.
         self.scene().selectionChanged.connect(self._returnSelection)
 
+    def createGroup(self, name='Group', preset='node_default', position=None, alternate=True, **kwargs):
+        namecache = name
+        count = 0
+        while name in self.scene().nodes.keys():
+            name = '%s_%s' % (namecache, count)
+            count += 1
+        nodeItem = NodeGroup(name=name, alternate=alternate, preset=preset,
+                            config=self.config, **kwargs)
+        self.scene().nodes[name] = nodeItem
+        if not position:
+            # Get the center of the view.
+            position = self.mapToScene(self.viewport().rect().center())
 
+        # Set node position.
+        self.scene().addItem(nodeItem)
+        nodeItem.setPos(position - nodeItem.nodeCenter)
+
+        # socket and plugs for adding attributes
+
+        # Emit signal.
+        self.signal_NodeCreated.emit(name)
+        self.addDefaultSockets(nodeItem)
+        nodeItem.populate(self.scene().selectedItems())
+        for i in self.scene().selectedItems():
+            self.removeItem(i)
+        return nodeItem
     # NODES
     def createNode(self, name='default', preset='node_default', position=None, alternate=True, **kwargs):
         """
@@ -655,10 +696,10 @@ class Nodz(QtWidgets.QGraphicsView):
         self.signal_NodeEdited.emit(oldName, newName)
 
     # ATTRS
-    def createAttribute(self, node, name='default', index=-1, preset='attr_default', plug=True, socket=True,
+    def createAttribute(self, node, name='default', pretty_name='default', index=-1, preset='attr_default', plug=True, socket=True,
                         dataType=None, plugMaxConnections=-1, socketMaxConnections=1, automation_level='Manual',
                         priority='Low', methodology='Artist Driven', duration=None, frequency=None,
-                        number_effected=None,):
+                        number_effected=None):
 
         """
         Create a new attribute with a given name.
@@ -707,12 +748,16 @@ class Nodz(QtWidgets.QGraphicsView):
             name = '%s_%s' % (name, count)
             count += 1
 
-        spInst = node._createAttribute(name=name, index=index, preset=preset, plug=plug, socket=socket,
+        print "%s is %s long, baseWidth is %s" % (name, len(name), node.baseWidth)
+
+        spInst = node._createAttribute(name=name, pretty_name=pretty_name, index=index, preset=preset, plug=plug, socket=socket,
                                        dataType=dataType, plugMaxConnections=plugMaxConnections,
                                        socketMaxConnections=socketMaxConnections, automation_level=automation_level,
                                        priority=priority, methodology=methodology, duration=duration,
                                        frequency=frequency, number_effected=number_effected)
-
+        new_width = len(name) * 30
+        if new_width > node.baseWidth:
+            node.baseWidth = new_width
         # Emit signal.
         self.signal_AttrCreated.emit(node.name, index)
 
@@ -891,7 +936,7 @@ class Nodz(QtWidgets.QGraphicsView):
         utils._saveData(filePath=jsonPath, data=data)
         self.signal_GraphSaved.emit(jsonPath)
         self.saveCSV(csvPath)
-        self.exportImage(jpgPath)
+        # self.exportImage(jpgPath)
 
     def loadGraph(self, filePath='path'):
         """
@@ -939,6 +984,10 @@ class Nodz(QtWidgets.QGraphicsView):
             for attrData in attrsData:
                 index = attrsData.index(attrData)
                 name = attrData['name']
+                try:
+                    pretty_name = attrData['pretty_name']
+                except KeyError:
+                    pretty_name = attrData['name']
                 plug = attrData['plug']
                 socket = attrData['socket']
                 preset = attrData['preset']
@@ -967,6 +1016,7 @@ class Nodz(QtWidgets.QGraphicsView):
 
                 self.createAttribute(node=node,
                                      name=name,
+                                     pretty_name=pretty_name,
                                      index=index,
                                      preset=preset,
                                      plug=plug,
@@ -1043,6 +1093,7 @@ class Nodz(QtWidgets.QGraphicsView):
         self.csv.to_csv(path_or_buf=filePath, index=False)
 
     def exportImage(self, filePath=None):
+        # TODO - something we are doing in here causes the interface to lock when creating images.
         view = self.scene()
         size = view.itemsBoundingRect()
         size.setHeight(size.height()+30)
@@ -1050,7 +1101,7 @@ class Nodz(QtWidgets.QGraphicsView):
         view.setSceneRect(size)
         map_ = QtGui.QImage(view.sceneRect().size().toSize(), QtGui.QImage.Format_RGB32)
         painter = QtGui.QPainter(map_)
-        map_.fill(QtGui.QColor(0,0,0))
+        map_.fill(QtGui.QColor(0, 0, 0))
         view.render(painter)
         painter.end()
         map_.save(filePath, "jpg")
@@ -1072,8 +1123,16 @@ class Nodz(QtWidgets.QGraphicsView):
         :param targetAttr: Attribute that receives the connection.
 
         """
-        plug = self.scene().nodes[sourceNode].plugs[sourceAttr]
-        socket = self.scene().nodes[targetNode].sockets[targetAttr]
+        try:
+            plug = self.scene().nodes[sourceNode].plugs[sourceAttr]
+        except KeyError:
+            print("Skipping source %s output connection creation due to missing attr: %s" % (sourceNode, sourceAttr))
+            return
+        try:
+            socket = self.scene().nodes[targetNode].sockets[targetAttr]
+        except KeyError:
+            print("Skipping target %s input connection creation due to missing attr: %s" % (targetNode, sourceAttr))
+            return
 
         connection = ConnectionItem(plug.center(), socket.center(), plug, socket)
 
@@ -1380,7 +1439,7 @@ class NodeItem(QtWidgets.QGraphicsItem):
 
 
 
-    def _createAttribute(self, name, index, preset, plug, socket, dataType, plugMaxConnections, socketMaxConnections,
+    def _createAttribute(self, name, pretty_name, index, preset, plug, socket, dataType, plugMaxConnections, socketMaxConnections,
                          automation_level, priority, methodology, duration, frequency, number_effected):
         """
         Create an attribute by expanding the node, adding a label and
@@ -1420,12 +1479,14 @@ class NodeItem(QtWidgets.QGraphicsItem):
         plugInst = None
         socketInst = None
         if plug:
+            print 'creating %s' % name, pretty_name
             plugInst = PlugItem(parent=self,
                                 attribute=name,
                                 index=self.attrCount,
                                 preset=preset,
                                 dataType=dataType,
-                                maxConnections=plugMaxConnections)
+                                maxConnections=plugMaxConnections,
+                                pretty_name=pretty_name)
 
             self.plugs[name] = plugInst
 
@@ -1437,7 +1498,8 @@ class NodeItem(QtWidgets.QGraphicsItem):
                                     index=self.attrCount,
                                     preset=preset,
                                     dataType=dataType,
-                                    maxConnections=socketMaxConnections)
+                                    maxConnections=socketMaxConnections,
+                                    pretty_name=pretty_name)
 
             self.sockets[name] = socketInst
 
@@ -1451,6 +1513,7 @@ class NodeItem(QtWidgets.QGraphicsItem):
 
         # Store attr data.
         self.attrsData[name] = {'name': name,
+                                'pretty_name': pretty_name,
                                 'socket': socket,
                                 'plug': plug,
                                 'preset': preset,
@@ -1523,12 +1586,12 @@ class NodeItem(QtWidgets.QGraphicsItem):
 
         # Remove all sockets connections.
         for socket in self.sockets.values():
-            while len(socket.connections)>0:
+            while len(socket.connections) > 0:
                 socket.connections[0]._remove()
 
         # Remove all plugs connections.
         for plug in self.plugs.values():
-            while len(plug.connections)>0:
+            while len(plug.connections) > 0:
                 plug.connections[0]._remove()
 
         # Remove node.
@@ -1773,7 +1836,7 @@ class SlotItem(QtWidgets.QGraphicsItem):
 
     """
 
-    def __init__(self, parent, attribute, preset, index, dataType, maxConnections):
+    def __init__(self, parent, attribute, preset, index, dataType, maxConnections, pretty_name=None):
         """
         Initialize the class.
 
@@ -2018,12 +2081,13 @@ class SlotItem(QtWidgets.QGraphicsItem):
                 dialog = NameInputs('Attribute Name')
                 #dialog.output.setText(self.captured_output_name)
                 dialog.exec_()
-                name_ = dialog.return_output()
+                name_, pretty_name = dialog.return_output()
             else:
                 name_ = self.captured_output_name
 
             if name_:
-                newAttr = nodzInst.createAttribute(node=nodeSocket.parent, name=name_, index=-1,
+                newAttr = nodzInst.createAttribute(node=nodeSocket.parent, name=name_,
+                                                   pretty_name=pretty_name, index=-1,
                                                    preset='attr_preset_1',
                                                    plug=startnode['Output'], socket=startnode['Input'], dataType=str,
                                                    plugMaxConnections=-1,
@@ -2090,7 +2154,7 @@ class PlugItem(SlotItem):
 
     """
 
-    def __init__(self, parent, attribute, index, preset, dataType, maxConnections):
+    def __init__(self, parent, attribute, index, preset, dataType, maxConnections, pretty_name=None):
         """
         Initialize the class.
 
@@ -2110,12 +2174,13 @@ class PlugItem(SlotItem):
         :type  dataType: Type.
 
         """
-        super(PlugItem, self).__init__(parent, attribute, preset, index, dataType, maxConnections)
+        super(PlugItem, self).__init__(parent, attribute, preset, index, dataType, maxConnections, pretty_name)
 
         # Storage.
         self.attributte = attribute
         self.preset = preset
         self.slotType = 'plug'
+        self.pretty_name = pretty_name
 
         self.parent = parent
 
@@ -2205,7 +2270,7 @@ class SocketItem(SlotItem):
 
     """
 
-    def __init__(self, parent, attribute, index, preset, dataType, maxConnections):
+    def __init__(self, parent, attribute, index, preset, dataType, maxConnections, pretty_name=None):
         """
         Initialize the socket.
 
@@ -2670,3 +2735,109 @@ class ConnectionItem(QtWidgets.QGraphicsItemGroup):
 
                 else:
                     self._remove()
+
+class NodeGroup(NodeItem):
+    def __init__(self, name, alternate, preset, config, **kwargs):
+        super(NodeGroup, self).__init__(name, alternate, preset, config, **kwargs)
+        self.collapsed = True
+        self.items = []
+        self.connections = []
+        self.oldPlugs = {}
+        self.oldSockets = {}
+        self.incoming = {}
+        self.outgoing = {}
+        self.newCon = []
+        self.description = "Group Node"
+
+    def populate(self, selection):
+        for i in selection:
+            self.items.append(i)
+            print i
+        for i in self.items:
+            for p in i.plugs.keys():
+                for con in i.plugs[p].connections:
+                    if con not in self.connections:
+                        self.connections.append(con)
+                    if not con.socketItem or con.socketItem.parent not in self.items:
+                        self.oldPlugs[p] = i.plugs[p]
+                        self.outgoing[p] = con
+            for s in i.sockets.keys():
+                for con in i.sockets[s].connections:
+                    if con not in self.connections:
+                        self.connections.append(con)
+                    if not con.plugItem or con.plugItem.parent not in self.items:
+                        self.oldSockets[s] = i.sockets[s]
+                        self.incoming[s] = con
+
+        for s in self.outgoing.keys():
+            c = self.outgoing[s]
+            i = c.plugItem.parent
+            self._createAttribute(s, self.attrCount, i.attrsData[s]['preset'], i.attrsData[s]['plug'],
+                                  i.attrsData[s]['socket'], i.attrsData[s]['dataType'],
+                                  i.attrsData[s]['plugMaxConnections'],
+                                  i.attrsData[s]['socketMaxConnections'],
+                                  i.attrsData[s]['automation_level'],
+                                  i.attrsData[s]['priority'], i.attrsData[s]['methodology'],i.attrsData[s]['duration'],
+                                       i.attrsData[s]['frequency'], i.attrsData[s]['number_effected'])
+
+            self.newCon.append(ConnectionItem(c.socketItem.center(), self.plugs[s].center(), c.socketItem, self.plugs[s]))
+            c.socketItem.connections.append(self.newCon[-1])
+
+        for p in self.incoming.keys():
+            c = self.incoming[p]
+            i = c.socketItem.parent
+            self._createAttribute(p, self.attrCount, i.attrsData[p]['preset'], i.attrsData[p]['plug'],
+                                  i.attrsData[p]['socket'], i.attrsData[p]['dataType'],
+                                  i.attrsData[p]['plugMaxConnections'],
+                                  i.attrsData[p]['socketMaxConnections'],
+                                  i.attrsData[p]['automation_level'],
+                                  i.attrsData[p]['priority'], i.attrsData[p]['methodology'],i.attrsData[p]['duration'],
+                                       i.attrsData[p]['frequency'], i.attrsData[p]['number_effected'])
+
+            self.newCon.append(ConnectionItem(self.sockets[p].center(), c.plugItem.center(), self.sockets[p], c.plugItem))
+            c.plugItem.connections.append(self.newCon[-1])
+
+        self.collapse()
+        self.collapsed = True
+
+    def _remove(self):
+        for i in self.newCon:
+            i._remove()
+
+        self.scene().removeItem(self)
+
+    def expand(self):
+        for c in self.connections:
+            self.scene().addItem(c)
+
+        for con in self.outgoing.values():
+            con.socketItem.connections.append(con)
+        for con in self.incoming.values():
+            con.plugItem.connections.append(con)
+
+        for i in self.items:
+            self.scene().addItem(i)
+
+        self.scene().update()
+
+    def collapse(self):
+        for c in self.connections:
+            self.scene().removeItem(c)
+
+        for c in self.incoming.values():
+            c.plugItem.connections.remove(c)
+        for c in self.outgoing.values():
+            c.socketItem.connections.remove(c)
+
+        for i in self.items:
+            self.scene().removeItem(i)
+
+        self.scene().update()
+
+    def mousePressEvent(self, event):
+        if event.button() == QtCore.Qt.RightButton:
+            if self.collapsed:
+                self.expand()
+            else:
+                self.collapse()
+            self.collapsed = not self.collapsed
