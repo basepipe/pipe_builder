@@ -19,6 +19,8 @@ class NodeSettingWidget(QtWidgets.QWidget):
         # self.setMaximumHeight(740)
         self.setMinimumHeight(740)
         self.setLayout(self.lay)
+        self.node_settings_box = None
+
 
     def initialize(self):
         '''
@@ -28,26 +30,29 @@ class NodeSettingWidget(QtWidgets.QWidget):
 
         self.lay = QtWidgets.QVBoxLayout()
         self.lay.setAlignment(QtCore.Qt.AlignTop)
-        self.settingsbox = QtWidgets.QVBoxLayout()
-        self.lay.addLayout(self.settingsbox)
+        self.settings_box = QtWidgets.QVBoxLayout()
+        self.lay.addLayout(self.settings_box)
 
     def refresh(self, settingData):
         # clear out widget
         self.settings = settingData
+        print '-----------------'
+        print self.settings
         if self.settings:
             self.signal_something_selected.emit()
-            for i in reversed(range(self.settingsbox.count())):
-                self.settingsbox.itemAt(i).widget().setParent(None)
+            for i in reversed(range(self.settings_box.count())):
+                self.settings_box.itemAt(i).widget().setParent(None)
 
             # add default settings
             for settings in settingData:
-                self.settingsbox.addWidget(NodeSettingsBox(parent=self.parent, values=settings, save=self._savesettings))
+                self.node_settings_box = NodeSettingsBox(parent=self.parent, values=settings, save=self._savesettings)
+                self.settings_box.addWidget(self.node_settings_box)
         else:
             self.signal_nothing_selected.emit()
 
     def _savesettings(self):
-        for i in reversed(range(self.settingsbox.count())):
-            self.settingsbox.itemAt(i).widget()._save_properties()
+        for i in reversed(range(self.settings_box.count())):
+            self.settings_box.itemAt(i).widget()._save_properties()
         self.signal_SaveSettings.emit(self.settings)
 
 
@@ -70,6 +75,10 @@ class NodeSettingsBox(QtWidgets.QTabWidget):
         self.lay_attrs = QtWidgets.QVBoxLayout(self.tab_attrs)
         self.lay_shelf = QtWidgets.QVBoxLayout(self.tab_shelf)
         self.lay_preflights = QtWidgets.QVBoxLayout(self.tab_preflights)
+        self.attrs_dict = {'Settings': {},
+                           'Connections': {},
+                           'Shelf': {},
+                           'Preflights': {}}
 
         self.addTab(self.tab_settings, 'Settings')
         self.addTab(self.tab_attrs, 'Connections')
@@ -201,6 +210,7 @@ class NodeSettingsBox(QtWidgets.QTabWidget):
                 pass
             else:
                 newproperty = SettingField(title=attr, value=str(val), save=save)
+                self.attrs_dict['Settings'][attr] = newproperty.textbox
                 self.lay_settings.addWidget(newproperty)
         self.lay_settings.addItem(QtWidgets.QSpacerItem(0, 0, QtWidgets.QSizePolicy.Minimum,
                          QtWidgets.QSizePolicy.Expanding))

@@ -3,9 +3,13 @@ import pandas as pd
 import random
 from Qt import QtGui, QtCore, QtWidgets
 import nodz_utils as utils
+import shutil
 from pipe_builder.inputUI import NameInputs, FileBrowserDialog
 
-defaultConfigPath = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'default_config.json')
+defaultConfigPath = os.path.join(os.path.expanduser('~\\Documents'), 'cglumberjack', 'default_config.json')
+if not os.path.exists(defaultConfigPath):
+    shutil.copy2(os.path.join(os.path.dirname(__file__), 'default_config.json'),
+                 defaultConfigPath)
 
 
 class Nodz(QtWidgets.QGraphicsView):

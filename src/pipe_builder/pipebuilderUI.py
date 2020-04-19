@@ -76,6 +76,12 @@ class PipeBuilder(QtWidgets.QDialog):
     def on_select_item(self):
         self.scroll.show()
 
+    @staticmethod
+    def fix_name(name_):
+        # replace spaces with _
+        fixed_name = name_.replace(' ', '_')
+        return fixed_name
+
     # Nodes
     @QtCore.Slot(str)
     @staticmethod
@@ -88,9 +94,12 @@ class PipeBuilder(QtWidgets.QDialog):
         print 'node deleted : ', nodeName
 
     @QtCore.Slot(str, str)
-    @staticmethod
-    def on_nodeEdited(nodeName, newName):
-        print 'node edited : {0}, new name : {1}'.format(nodeName, newName)
+    def on_nodeEdited(self, nodeName, newName):
+        line_edit = self.settingWidgets.node_settings_box.attrs_dict['Settings']['name']
+        fixed_name = self.fix_name(newName)
+        line_edit.setText(fixed_name)
+        # line_edit.setCursorPosition(100)
+        print 'node edited : {0}, new name : {1}'.format(nodeName, fixed_name)
 
     @QtCore.Slot(str)
     def on_nodeSelected(self, nodesName):

@@ -1,6 +1,11 @@
 from Qt import QtWidgets, QtGui, QtCore
 import random
 from inputUI import FileBrowserDialog
+import os
+
+WORKFLOW_DIR = os.path.join(os.path.expanduser('~\\Documents'), 'cglumberjack', 'workflows')
+if not os.path.exists(WORKFLOW_DIR):
+    os.makedirs(WORKFLOW_DIR)
 
 
 class NavBar(QtWidgets.QWidget):
@@ -54,19 +59,23 @@ class Toolbar(QtWidgets.QWidget):
 
     def save_as(self):
         dialog = FileBrowserDialog('Save Pipeline Graph', 'save')
+        dialog.setDirectory(WORKFLOW_DIR)
         dialog.exec_()
         self.graph.saveGraph(filePath=dialog.selectedFiles()[0])
         self.filename_changed.emit(dialog.selectedFiles()[0])
 
     def load(self):
         dialog = FileBrowserDialog('Open Pipeline File', 'open')
+        dialog.setDirectory(WORKFLOW_DIR)
         dialog.exec_()
         self.graph.loadGraph(filePath=dialog.selectedFiles()[0])
 
     def open(self):
         # TODO - clear the current graph
         dialog = FileBrowserDialog('Open Pipeline File', 'open')
+        dialog.setDirectory(WORKFLOW_DIR)
         dialog.exec_()
+        self.graph.clearGraph()
         self.graph.loadGraph(filePath=dialog.selectedFiles()[0])
         self.filename_changed.emit(dialog.selectedFiles()[0])
 
@@ -77,5 +86,6 @@ class Toolbar(QtWidgets.QWidget):
 
     def pdf(self):
         dialog = FileBrowserDialog("Export Graph Image", "save")
+        dialog.setDirectory(WORKFLOW_DIR)
         dialog.exec_()
         self.graph.exportImage(filePath=dialog.selectedFiles()[0])
