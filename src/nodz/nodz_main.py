@@ -560,12 +560,14 @@ class Nodz(QtWidgets.QGraphicsView):
         print 34333333333333333
         nodeItem.setPos(nodeItem.nodeCenter)
         self.scene().addItem(nodeItem)
-        # TODO - how do i shift select the GroupItem with code?
+        rect = QtCore.QRect(nodeItem.center_x, nodeItem.center_y, nodeItem.baseWidth, nodeItem.height)
+        rect = QtCore.QRectF(rect)
+        path = QtGui.QPainterPath()
+        path.addRect(rect)
+        self.scene().setSelectionArea(path)
         # TODO - how do i double click and hide the selected nodes and change the size of the group node?
         # TODO - how do i show attributes that are connected and crossing lines?
         # TODO - how do i double click the small group node, and show the nodes inside.
-        print self.scene().selectedItems()
-        self.scene().selectedItems().append(nodeItem)
         return nodeItem
 
 
@@ -1319,7 +1321,8 @@ class GroupItem(QtWidgets.QGraphicsItem):
 
         """
         super(GroupItem, self).__init__()
-
+        self.center_x = 0
+        self.center_y = 0
         self.nodes = nodes
         self.setZValue(-1)
         self.config = config
@@ -1410,6 +1413,8 @@ class GroupItem(QtWidgets.QGraphicsItem):
         self.baseHeight = height + 300
         self.baseWidth = width + 300
         print 'setting center %s %s' % (center_x, center_y)
+        self.center_x = center_x
+        self.center_y = center_y
         return QtCore.QPointF(center_x, center_y)
         # return rect
 
