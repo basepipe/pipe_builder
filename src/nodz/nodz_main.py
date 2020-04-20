@@ -555,8 +555,17 @@ class Nodz(QtWidgets.QGraphicsView):
                             config=self.config, software='default', **kwargs)
         # self.scene().nodes[name] = node
         position = self.mapToScene(self.viewport().rect().center())
-        nodeItem.setPos(position - nodeItem.nodeCenter)
+        print position
+        print nodeItem.nodeCenter
+        print 34333333333333333
+        nodeItem.setPos(nodeItem.nodeCenter)
         self.scene().addItem(nodeItem)
+        # TODO - how do i shift select the GroupItem with code?
+        # TODO - how do i double click and hide the selected nodes and change the size of the group node?
+        # TODO - how do i show attributes that are connected and crossing lines?
+        # TODO - how do i double click the small group node, and show the nodes inside.
+        print self.scene().selectedItems()
+        self.scene().selectedItems().append(nodeItem)
         return nodeItem
 
 
@@ -1383,6 +1392,7 @@ class GroupItem(QtWidgets.QGraphicsItem):
         max_x = 0
         max_y = 0
         for n in self.nodes:
+            print n.name, n.pos()
             if not min_x or n.pos().x() < min_x:
                 min_x = n.pos().x()
             if not min_y or n.pos().y() < min_y:
@@ -1391,13 +1401,15 @@ class GroupItem(QtWidgets.QGraphicsItem):
                 max_x = n.pos().x()
             if not max_y or n.pos().y() > max_y:
                 max_y = n.pos().y()
-        center_x = min_x + ((max_x - min_x) / 2)
-        center_y = min_y + ((max_y - min_y) / 2)
+
         width = max_x - min_x
         height = max_y - min_y
-        self.baseHeight = height
-        self.baseWidth = width
-        rect = min_x, min_y, max_x, max_y
+        center_x = min_x - 50
+        center_y = min_y - 150
+
+        self.baseHeight = height + 300
+        self.baseWidth = width + 300
+        print 'setting center %s %s' % (center_x, center_y)
         return QtCore.QPointF(center_x, center_y)
         # return rect
 
@@ -1411,15 +1423,16 @@ class GroupItem(QtWidgets.QGraphicsItem):
         self.setFlag(QtWidgets.QGraphicsItem.ItemIsSelectable)
 
         # Dimensions.
-        self.baseWidth = config['node_width']
-        self.baseHeight = config['node_height']
+        self.nodeCenter = self.get_center()
+        # self.baseWidth = config['node_width']
+        # self.baseHeight = config['node_height']
         self.attrHeight = config['node_attr_height']
         self.border = config['node_border']
         self.radius = config['node_radius']
 
-        self.nodeCenter = self.get_center()
-        self.nodeCenter.setX(self.baseWidth / 2.0)
-        self.nodeCenter.setY(self.height / 2.0)
+
+        #self.nodeCenter.setX(self.baseWidth / 2.0)
+        #self.nodeCenter.setY(self.height / 2.0)
 
         self._brush = QtGui.QBrush()
         self._brush.setStyle(QtCore.Qt.SolidPattern)
@@ -1682,23 +1695,22 @@ class GroupItem(QtWidgets.QGraphicsItem):
 
         """
         nodes = self.scene().nodes
+        print nodes
+        # self.scene().selectedNodes = nodes
         for node in nodes.values():
             node.setZValue(1)
+        for n in self.nodes:
+            print 'selecting %s' % n
+        self.setZValue(-2)
 
-        for item in self.scene().items():
-            if isinstance(item, ConnectionItem):
-                item.setZValue(1)
-
-        self.setZValue(2)
-
-        super(NodeItem, self).mousePressEvent(event)
+        super(GroupItem, self).mousePressEvent(event)
 
     def mouseDoubleClickEvent(self, event):
         """
         Emit a signal.
 
         """
-        super(NodeItem, self).mouseDoubleClickEvent(event)
+        super(GroupItem, self).mouseDoubleClickEvent(event)
         self.scene().parent().signal_NodeDoubleClicked.emit(self.name)
 
         # self.scene().addWidget(QtWidgets.QLineEdit('Test'))
@@ -1731,9 +1743,11 @@ class GroupItem(QtWidgets.QGraphicsItem):
                 self.setPos(snap_pos)
 
                 self.scene().updateScene()
+                self.setZValue(-1)
             else:
                 self.scene().updateScene()
-                super(NodeItem, self).mouseMoveEvent(event)
+                self.setZValue(-1)
+                super(GroupItem, self).mouseMoveEvent(event)
 
     def mouseReleaseEvent(self, event):
         """
@@ -1742,7 +1756,8 @@ class GroupItem(QtWidgets.QGraphicsItem):
         """
         # Emit node moved signal.
         self.scene().signal_NodeMoved.emit(self.name, self.pos())
-        super(NodeItem, self).mouseReleaseEvent(event)
+        self.setZValue(-3)
+        super(GroupItem, self).mouseReleaseEvent(event)
 
     def hoverLeaveEvent(self, event):
         """
@@ -1753,9 +1768,9 @@ class GroupItem(QtWidgets.QGraphicsItem):
 
         for item in nodzInst.scene().items():
             if isinstance(item, ConnectionItem):
-                item.setZValue(0)
+                item.setZValue(-2)
 
-        super(NodeItem, self).hoverLeaveEvent(event)
+        super(GroupItem, self).hoverLeaveEvent(event)
 
     def set_priority(self, level):
         if level == 1:

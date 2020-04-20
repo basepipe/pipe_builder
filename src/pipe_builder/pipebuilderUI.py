@@ -217,25 +217,29 @@ class PipeBuilder(QtWidgets.QDialog):
         structures the node information from Nodz in an easy to access format
         :return:
         '''
+        from nodz.nodz_main import NodeItem, GroupItem
         query_attributes = ['name', 'description', 'pipeID', 'software', 'preflight_data']
         all_info = []
         for item in self.graph.scene().selectedItems():
-            node_settings = {}
-            for setting in query_attributes:
-                val = getattr(item, setting)
-                node_settings[setting] = val
+            if isinstance(item, NodeItem):
+                node_settings = {}
+                for setting in query_attributes:
+                    val = getattr(item, setting)
+                    node_settings[setting] = val
 
-            # add socket-plug data
-            sockets = {}
-            plugs = {}
-            for socket in item.sockets.itervalues():
-                sockets[socket.index] = socket.attribute
-            for plug in item.plugs.itervalues():
-                plugs[plug.index] = plug.attribute
-            node_settings['sockets'] = sockets
-            node_settings['plugs'] = plugs
+                # add socket-plug data
+                sockets = {}
+                plugs = {}
+                for socket in item.sockets.itervalues():
+                    sockets[socket.index] = socket.attribute
+                for plug in item.plugs.itervalues():
+                    plugs[plug.index] = plug.attribute
+                node_settings['sockets'] = sockets
+                node_settings['plugs'] = plugs
 
-            all_info.append(node_settings)
+                all_info.append(node_settings)
+            elif isinstance(item, GroupItem):
+                print item, 'is a group item'
 
         return all_info
 
