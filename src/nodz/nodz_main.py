@@ -1455,8 +1455,6 @@ class GroupItem(QtWidgets.QGraphicsItem):
         self._attrPen = QtGui.QPen()
         self._attrPen.setStyle(QtCore.Qt.SolidLine)
 
-
-
     def _createAttribute(self, name, pretty_name, index, preset, plug, socket, dataType, plugMaxConnections, socketMaxConnections,
                          automation_level, priority, methodology, duration, frequency, number_effected):
         """
