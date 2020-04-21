@@ -900,24 +900,32 @@ class Nodz(QtWidgets.QGraphicsView):
         automated_outputs = []
         manual_outputs = 0
         for item in self.scene().nodes:
-            required = {}
-            for node in self.scene().nodes[item].plugs.keys():
-                print self.scene().nodes[item].plugs[node].parent.name
-                if node not in required.keys():
-                    required[node] = []
-                required[node].append(self.scene().nodes[item].plugs[node].parent.name)
-            inputs = {}
-            for node in self.scene().nodes[item].sockets.keys():
-                if node not in inputs:
-                    inputs[node] = []
-                inputs[node].append(self.scene().nodes[item].sockets[node].parent.name)
-            self.csv = self.csv.append(pd.DataFrame([[item, inputs, required, '', '', '', '']], columns=self.csv.columns), ignore_index=True)
-            inputs = []
+            print item
+            print '\t', self.scene().nodes[item]
+            # total_outputs += len(self.scene().nodes[item].plugs.keys())
+            # total_inputs += len(self.scene().nodes[item].sockets.keys())
+            # for k in self.scene().nodes[item].plugs:
+            #     print '\t\t', self.scene().nodes[item].plugs[k]
+            #
+            # print '\t', self.scene().nodes[item].plugs
+            # print '\t', self.scene().nodes[item].sockets
+            # required = {}
+            # for node in self.scene().nodes[item].plugs.keys():
+            #     print self.scene().nodes[item].plugs[node].parent.name
+            #     if node not in required.keys():
+            #         required[node] = []
+            #     required[node].append(self.scene().nodes[item].plugs[node].parent.name)
+            # inputs = {}
+            # for node in self.scene().nodes[item].sockets.keys():
+            #     if node not in inputs:
+            #         inputs[node] = []
+            #     inputs[node].append(self.scene().nodes[item].sockets[node].parent.name)
+            # self.csv = self.csv.append(pd.DataFrame([[item, inputs, required]], columns=self.csv.columns), ignore_index=True)
+            # inputs = []
             outputs = []
-        print self.csv
-        # print 'Total Outputs: %s' % total_outputs
-        # print 'Total Inputs: %s' % total_inputs
-        # print 'Total Failure Points: %s' % (total_inputs+total_inputs)
+        print 'Total Outputs: %s' % total_outputs
+        print 'Total Inputs: %s' % total_inputs
+        print 'Total Failure Points: %s' % (total_inputs+total_inputs)
 
 
     # GRAPH
