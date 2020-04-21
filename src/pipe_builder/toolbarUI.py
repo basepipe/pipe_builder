@@ -29,6 +29,8 @@ class Toolbar(QtWidgets.QWidget):
         self.openbtn = QtWidgets.QPushButton('Open Graph')
         # self.csvbtn = QtWidgets.QPushButton('Create CSV')
         self.pdfbtn = QtWidgets.QPushButton('Export PDF')
+        self.failure_points_label = QtWidgets.QLabel('Failure Points:')
+        self.failure_points_number = QtWidgets.QLabel('Not Calculated')
 
         self.addbtn.clicked.connect(self.graph_create_node)
         self.savebtn.clicked.connect(self.save_as)
@@ -44,7 +46,9 @@ class Toolbar(QtWidgets.QWidget):
         lay.addWidget(self.openbtn)
         # lay.addWidget(self.csvbtn)
         lay.addWidget(self.pdfbtn)
-        lay.addItem(QtWidgets.QSpacerItem(0, 0, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum))
+        lay.addStretch(1)
+        lay.addWidget(self.failure_points_label)
+        lay.addWidget(self.failure_points_number)
         self.setLayout(lay)
 
     def graph_create_node(self):
@@ -78,6 +82,7 @@ class Toolbar(QtWidgets.QWidget):
         self.graph.clearGraph()
         self.graph.loadGraph(filePath=dialog.selectedFiles()[0])
         self.filename_changed.emit(dialog.selectedFiles()[0])
+        self.graph.print_connections()
 
     def csv(self):
         dialog = FileBrowserDialog("Export CSV", "save")

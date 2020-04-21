@@ -76,6 +76,8 @@ class Nodz(QtWidgets.QGraphicsView):
         self.csv = pd.DataFrame(columns=['Process', 'Plugs', 'Priority', 'Methodology', 'Duration', 'Frequency',
                                          'Number Effected'])
 
+
+
     def wheelEvent(self, event):
         """
         Zoom in the view with the mouse wheel.
@@ -890,6 +892,33 @@ class Nodz(QtWidgets.QGraphicsView):
         else:
             self.signal_AttrEdited.emit(node.name, index, index)
 
+    def print_connections(self):
+        print self.csv
+        total = 0
+        total_inputs = 0
+        total_outputs = 0
+        automated_outputs = []
+        manual_outputs = 0
+        for item in self.scene().nodes:
+            required = {}
+            for node in self.scene().nodes[item].plugs.keys():
+                print self.scene().nodes[item].plugs[node].parent.name
+                if node not in required.keys():
+                    required[node] = []
+                required[node].append(self.scene().nodes[item].plugs[node].parent.name)
+            inputs = {}
+            for node in self.scene().nodes[item].sockets.keys():
+                if node not in inputs:
+                    inputs[node] = []
+                inputs[node].append(self.scene().nodes[item].sockets[node].parent.name)
+            self.csv = self.csv.append(pd.DataFrame([[item, inputs, required, '', '', '', '']], columns=self.csv.columns), ignore_index=True)
+            inputs = []
+            outputs = []
+        print self.csv
+        # print 'Total Outputs: %s' % total_outputs
+        # print 'Total Inputs: %s' % total_inputs
+        # print 'Total Failure Points: %s' % (total_inputs+total_inputs)
+
 
     # GRAPH
     def saveGraph(self, filePath='path'):
@@ -1115,7 +1144,10 @@ class Nodz(QtWidgets.QGraphicsView):
         view.setSceneRect(size)
         map_ = QtGui.QImage(view.sceneRect().size().toSize(), QtGui.QImage.Format_RGB32)
         painter = QtGui.QPainter(map_)
-        map_.fill(utils._convertDataToColor(self.config['bg_color']))
+        try:
+            map_.fill(utils._convertDataToColor(self.config['bg_color']))
+        except KeyError:
+            map_.fill(utils._convertDataToColor([130, 130, 130, 255]))
         view.render(painter)
         painter.end()
         map_.save(filePath, "jpg")
