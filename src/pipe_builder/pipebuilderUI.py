@@ -105,10 +105,8 @@ class PipeBuilder(QtWidgets.QDialog):
 
     @QtCore.Slot(str)
     def on_nodeSelected(self, nodesName):
-        # print 'node selected : ', nodesName
-        all_info = self.query_selected_node_info()
-        print 'ALL_INFO', all_info
-        self.settingWidgets.refresh(settingData=all_info)
+        print 'node selected : ', nodesName
+        self.settingWidgets.refresh(settingData=self.query_selected_node_info())
 
     @QtCore.Slot(str, object)
     @staticmethod
@@ -220,31 +218,34 @@ class PipeBuilder(QtWidgets.QDialog):
         structures the node information from Nodz in an easy to access format
         :return:
         '''
-        from nodz.nodz_main import NodeItem, GroupItem
         query_attributes = ['name', 'description', 'pipeID', 'software', 'preflight_data']
         all_info = []
-        for item in self.graph.scene().selectedItems():
-            if isinstance(item, NodeItem):
-                node_settings = {}
-                for setting in query_attributes:
-                    val = getattr(item, setting)
-                    node_settings[setting] = val
+        item = self.graph.scene().selectedItems()[0]
+        if isinstance(item, nodz.NodeItem):
+            print 'made it'
+            node_settings = {}
+            for setting in query_attributes:
+                val = getattr(item, setting)
+                node_settings[setting] = val
 
-                # add socket-plug data
-                sockets = {}
-                plugs = {}
-                for socket in item.sockets.itervalues():
-                    sockets[socket.index] = socket.attribute
-                for plug in item.plugs.itervalues():
-                    plugs[plug.index] = plug.attribute
-                node_settings['sockets'] = sockets
-                node_settings['plugs'] = plugs
+            # add socket-plug data
+            sockets = {}
+            plugs = {}
+            for socket in item.sockets.itervalues():
+                sockets[socket.index] = socket.attribute
+            for plug in item.plugs.itervalues():
+                plugs[plug.index] = plug.attribute
+            node_settings['sockets'] = sockets
+            node_settings['plugs'] = plugs
 
-                all_info.append(node_settings)
-            elif isinstance(item, GroupItem):
-                print item, 'is a group item'
+            all_info.append(node_settings)
+            return all_info
+        elif isinstance(item, nodz.GroupItem):
+            print item, 'is a group item'
+        else:
+            print 'instance is: %s' % type(item)
 
-        return all_info
+
 
     def closeEvent(self, event):
         if self.graph.filepath:
