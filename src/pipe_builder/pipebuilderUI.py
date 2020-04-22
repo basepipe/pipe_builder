@@ -86,12 +86,14 @@ class PipeBuilder(QtWidgets.QDialog):
     @QtCore.Slot(str)
     @staticmethod
     def on_nodeCreated(nodeName):
-        print 'node created : ', nodeName
+        #print 'node created : ', nodeName
+        pass
 
     @QtCore.Slot(str)
     @staticmethod
     def on_nodeDeleted(nodeName):
         print 'node deleted : ', nodeName
+        pass
 
     @QtCore.Slot(str, str)
     def on_nodeEdited(self, nodeName, newName):
@@ -138,8 +140,9 @@ class PipeBuilder(QtWidgets.QDialog):
     @QtCore.Slot(str, str, str, str)
     @staticmethod
     def on_connected(srcNodeName, srcPlugName, destNodeName, dstSocketName):
-        print 'connected src: "{0}" at "{1}" to dst: "{2}" at "{3}"'.format(srcNodeName, srcPlugName, destNodeName,
-                                                                            dstSocketName)
+        #print 'connected src: "{0}" at "{1}" to dst: "{2}" at "{3}"'.format(srcNodeName, srcPlugName, destNodeName,
+        #                                                                    dstSocketName)
+        pass
 
     @QtCore.Slot(str, str, str, str)
     def on_disconnected(srcNodeName, srcPlugName, destNodeName, dstSocketName):

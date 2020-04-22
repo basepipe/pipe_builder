@@ -82,7 +82,9 @@ class Toolbar(QtWidgets.QWidget):
         self.graph.clearGraph()
         self.graph.loadGraph(filePath=dialog.selectedFiles()[0])
         self.filename_changed.emit(dialog.selectedFiles()[0])
-        self.graph.print_connections()
+        automated, manual = self.graph.analyze_connections()
+        self.failure_points_number.setText(str(manual))
+
 
     def csv(self):
         dialog = FileBrowserDialog("Export CSV", "save")

@@ -407,6 +407,7 @@ class Nodz(QtWidgets.QGraphicsView):
             self.fitInView(itemsArea, QtCore.Qt.KeepAspectRatio)
         else:
             itemsArea = self.scene().itemsBoundingRect()
+            # TODO = add 150 border to the bounding box.
             self.fitInView(itemsArea, QtCore.Qt.KeepAspectRatio)
 
     def _getSelectionBoundingbox(self):
@@ -892,41 +893,20 @@ class Nodz(QtWidgets.QGraphicsView):
         else:
             self.signal_AttrEdited.emit(node.name, index, index)
 
-    def print_connections(self):
-        print self.csv
-        total = 0
-        total_inputs = 0
-        total_outputs = 0
-        automated_outputs = []
-        manual_outputs = 0
+    def analyze_connections(self):
+        automated = 0
+        manual = 0
         for item in self.scene().nodes:
-            print item
-            print '\t', self.scene().nodes[item]
-            # total_outputs += len(self.scene().nodes[item].plugs.keys())
-            # total_inputs += len(self.scene().nodes[item].sockets.keys())
-            # for k in self.scene().nodes[item].plugs:
-            #     print '\t\t', self.scene().nodes[item].plugs[k]
-            #
-            # print '\t', self.scene().nodes[item].plugs
-            # print '\t', self.scene().nodes[item].sockets
-            # required = {}
-            # for node in self.scene().nodes[item].plugs.keys():
-            #     print self.scene().nodes[item].plugs[node].parent.name
-            #     if node not in required.keys():
-            #         required[node] = []
-            #     required[node].append(self.scene().nodes[item].plugs[node].parent.name)
-            # inputs = {}
-            # for node in self.scene().nodes[item].sockets.keys():
-            #     if node not in inputs:
-            #         inputs[node] = []
-            #     inputs[node].append(self.scene().nodes[item].sockets[node].parent.name)
-            # self.csv = self.csv.append(pd.DataFrame([[item, inputs, required]], columns=self.csv.columns), ignore_index=True)
-            # inputs = []
-            outputs = []
-        print 'Total Outputs: %s' % total_outputs
-        print 'Total Inputs: %s' % total_inputs
-        print 'Total Failure Points: %s' % (total_inputs+total_inputs)
+            for k in self.scene().nodes[item].attrsData:
+                for attr in self.scene().nodes[item].attrsData[k]:
+                    if attr == 'automation_level':
+                        level = self.scene().nodes[item].attrsData[k][attr]
+                        if level.lower() == 'manual':
+                            manual += 1
+                        elif level.lower() == 'automated':
+                            automated += 1
 
+        return automated, manual
 
     # GRAPH
     def saveGraph(self, filePath='path'):
@@ -1097,7 +1077,7 @@ class Nodz(QtWidgets.QGraphicsView):
                                   targetNode, targetAttr)
 
         self.scene().update()
-
+        self._focus()
         # Emit signal.
         self.signal_GraphLoaded.emit(filePath)
 
@@ -1553,7 +1533,7 @@ class GroupItem(QtWidgets.QGraphicsItem):
         plugInst = None
         socketInst = None
         if plug:
-            print 'creating %s' % name, pretty_name
+            # print 'creating %s' % name, pretty_name
             plugInst = PlugItem(parent=self,
                                 attribute=name,
                                 index=self.attrCount,
