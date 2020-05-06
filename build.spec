@@ -32,8 +32,8 @@ except:
                   'PySide2.QtTest'
                  ]
 
-        pyside_libs.append(("/usr/local/Cellar/qt/5.9.1/plugins/", ""))
-        pyside_libs.append(("/usr/local/Cellar/qt/5.9.1/plugins/platforms/libqcocoa.dylib", ""))
+        pyside_libs.append(("/usr/local/Cellar/qt/5.9.1/outputins/", ""))
+        pyside_libs.append(("/usr/local/Cellar/qt/5.9.1/outputins/platforms/libqcocoa.dylib", ""))
     except:
         print "FAILED TO FIND PYSIDE :("
         sys.exit()

@@ -28,7 +28,7 @@ class Toolbar(QtWidgets.QWidget):
         self.loadbtn = QtWidgets.QPushButton('Import Graph')
         self.openbtn = QtWidgets.QPushButton('Open Graph')
         # self.csvbtn = QtWidgets.QPushButton('Create CSV')
-        self.pdfbtn = QtWidgets.QPushButton('Export PDF')
+        self.pdfbtn = QtWidgets.QPushButton('Export JPG')
         self.failure_points_label = QtWidgets.QLabel('Failure Points:')
         self.failure_points_number = QtWidgets.QLabel('Not Calculated')
 
@@ -83,8 +83,7 @@ class Toolbar(QtWidgets.QWidget):
         self.graph.loadGraph(filePath=dialog.selectedFiles()[0])
         self.filename_changed.emit(dialog.selectedFiles()[0])
         automated, manual = self.graph.analyze_connections()
-        self.failure_points_number.setText(str(manual))
-
+        self.failure_points_number.setText('%s/%s' % (str(manual), str(automated*2+manual)))
 
     def csv(self):
         dialog = FileBrowserDialog("Export CSV", "save")

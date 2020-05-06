@@ -1133,9 +1133,11 @@ class Nodz(QtWidgets.QGraphicsView):
         map_ = QtGui.QImage(view.sceneRect().size().toSize(), QtGui.QImage.Format_RGB32)
         painter = QtGui.QPainter(map_)
         try:
+            print self.config['bg_color']
             map_.fill(utils._convertDataToColor(self.config['bg_color']))
         except KeyError:
-            map_.fill(utils._convertDataToColor([130, 130, 130, 255]))
+            print('setting color')
+            map_.fill(utils._convertDataToColor([60, 63, 65, 255]))
         view.render(painter)
         painter.end()
         map_.save(filePath, "jpg")

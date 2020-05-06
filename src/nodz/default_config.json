@@ -21,7 +21,7 @@
     "node_radius": 10,
     "node_border": 2,
     "node_attr_height": 30,
-    "connection_width": 2,
+    "connection_width": 4,
 
     // Default colors > Edit values BUT do not delete.
     "alternate_value": 20,
@@ -47,8 +47,8 @@
     "attr_default": {
         "bg": [160, 160, 160, 255],
         "text": [220, 220, 220, 255],
-        "plug": [255, 155, 0, 255],
-        "socket": [255, 155, 0, 255]
+        "output": [255, 155, 0, 255],
+        "input": [255, 155, 0, 255]
     },
 
     // Custom colors > Add and remove as you want.
@@ -65,15 +65,15 @@
     "attr_preset_1": {
         "bg": [60, 60, 60, 255],
         "text": [220, 220, 220, 255],
-        "plug": [255, 155, 0, 255],
-        "socket": [255, 155, 0, 255],
+        "output": [255, 155, 0, 255],
+        "input": [255, 155, 0, 255],
         "adds": [80, 80, 80, 255]
     },
 
     "attr_preset_3":{
         "bg": [160, 160, 160, 255],
         "text": [220, 220, 220, 255],
-        "plug": [255, 155, 0, 255],
-        "socket": [255, 155, 0, 255]
+        "output": [255, 155, 0, 255],
+        "input": [255, 155, 0, 255]
     }
 }

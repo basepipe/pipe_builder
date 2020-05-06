@@ -16,30 +16,30 @@
                 {
                     "dataType": "<type 'str'>", 
                     "name": "Aattr1", 
-                    "plug": true, 
+                    "output": true,
                     "preset": "attr_preset_1", 
-                    "socket": false
+                    "input": false
                 }, 
                 {
                     "dataType": "<type 'int'>", 
                     "name": "Aattr2", 
-                    "plug": false, 
+                    "output": false,
                     "preset": "attr_preset_1", 
-                    "socket": false
+                    "input": false
                 }, 
                 {
                     "dataType": "<type 'int'>", 
                     "name": "Aattr3", 
-                    "plug": true, 
+                    "output": true,
                     "preset": "attr_preset_2", 
-                    "socket": true
+                    "input": true
                 }, 
                 {
                     "dataType": "<type 'str'>", 
                     "name": "Aattr4", 
-                    "plug": true, 
+                    "output": true,
                     "preset": "attr_preset_2", 
-                    "socket": true
+                    "input": true
                 }
             ], 
             "position": [
@@ -54,16 +54,16 @@
                 {
                     "dataType": "<type 'str'>", 
                     "name": "Battr1", 
-                    "plug": true, 
+                    "output": true,
                     "preset": "attr_preset_1", 
-                    "socket": false
+                    "input": false
                 }, 
                 {
                     "dataType": "<type 'int'>", 
                     "name": "Battr2", 
-                    "plug": true, 
+                    "output": true,
                     "preset": "attr_preset_1", 
-                    "socket": false
+                    "input": false
                 }
             ], 
             "position": [

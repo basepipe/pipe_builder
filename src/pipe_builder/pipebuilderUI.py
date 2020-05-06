@@ -151,7 +151,8 @@ class PipeBuilder(QtWidgets.QDialog):
     @QtCore.Slot()
     def on_graphSaved(self, data):
         self.on_filename_changed(data)
-        print 'graph saved !'
+        # we don't save the .jpg here because it requires restart at this time.
+        print 'graph saved: %s' % data
 
     @QtCore.Slot()
     def on_graphLoaded(self, data):
@@ -220,30 +221,31 @@ class PipeBuilder(QtWidgets.QDialog):
         '''
         query_attributes = ['name', 'description', 'pipeID', 'software', 'preflight_data']
         all_info = []
-        item = self.graph.scene().selectedItems()[0]
-        if isinstance(item, nodz.NodeItem):
-            print 'made it'
-            node_settings = {}
-            for setting in query_attributes:
-                val = getattr(item, setting)
-                node_settings[setting] = val
+        if self.graph.scene().selectedItems():
+            item = self.graph.scene().selectedItems()[0]
+            if isinstance(item, nodz.NodeItem):
+                print 'made it'
+                node_settings = {}
+                for setting in query_attributes:
+                    val = getattr(item, setting)
+                    node_settings[setting] = val
 
-            # add socket-plug data
-            sockets = {}
-            plugs = {}
-            for socket in item.sockets.itervalues():
-                sockets[socket.index] = socket.attribute
-            for plug in item.plugs.itervalues():
-                plugs[plug.index] = plug.attribute
-            node_settings['sockets'] = sockets
-            node_settings['plugs'] = plugs
+                # add socket-plug data
+                sockets = {}
+                plugs = {}
+                for socket in item.sockets.itervalues():
+                    sockets[socket.index] = socket.attribute
+                for plug in item.plugs.itervalues():
+                    plugs[plug.index] = plug.attribute
+                node_settings['sockets'] = sockets
+                node_settings['plugs'] = plugs
 
-            all_info.append(node_settings)
-            return all_info
-        elif isinstance(item, nodz.GroupItem):
-            print item, 'is a group item'
-        else:
-            print 'instance is: %s' % type(item)
+                all_info.append(node_settings)
+                return all_info
+            elif isinstance(item, nodz.GroupItem):
+                print item, 'is a group item'
+            else:
+                print 'instance is: %s' % type(item)
 
 
 

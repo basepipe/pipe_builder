@@ -80,7 +80,7 @@ def editNode(node, newName)
 ```
 Attributes
 ```python
-def createAttribute(node, name, index, preset, plug, socket, dataType, plugMaxConnections, socketMaxConnections)
+def createAttribute(node, name, index, preset, output, input, dataType, outputMaxConnections, inputMaxConnections)
 def deleteAttribute(node, index)
 def editAttribute( node, index, newName, newIndex)
 ```
@@ -119,10 +119,10 @@ signal_AttrEdited(nodeName, oldIndex, newIndex)
 ```
 Connections
 ```python
-signal_PlugConnected(srcNodeName, plugAttribute, dstNodeName, socketAttribue)
-signal_PlugDisconnected(srcNodeName, plugAttribute, dstNodeName, socketAttribue)
-signal_SocketConnected(srcNodeName, plugAttribute, dstNodeName, socketAttribue)
-signal_SocketDisconnected(srcNodeName, plugAttribute, dstNodeName, socketAttribue)
+signal_OutputConnected(srcNodeName, outputAttribute, dstNodeName, inputAttribue)
+signal_OutputDisconnected(srcNodeName, outputAttribute, dstNodeName, inputAttribue)
+signal_SocketConnected(srcNodeName, outputAttribute, dstNodeName, inputAttribue)
+signal_SocketDisconnected(srcNodeName, outputAttribute, dstNodeName, inputAttribue)
 ```
 Graph
 ```python
