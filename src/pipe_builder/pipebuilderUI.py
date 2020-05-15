@@ -75,6 +75,7 @@ class PipeBuilder(QtWidgets.QDialog):
 
     def on_select_item(self):
         self.scroll.show()
+        self.toolbar.update_failure_points()
 
     @staticmethod
     def fix_name(name_):

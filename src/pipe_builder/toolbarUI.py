@@ -75,6 +75,10 @@ class Toolbar(QtWidgets.QWidget):
         dialog.exec_()
         self.graph.loadGraph(filePath=dialog.selectedFiles()[0])
 
+    def update_failure_points(self):
+        automated, manual = self.graph.analyze_connections()
+        self.failure_points_number.setText('%s/%s' % (str(manual), str(automated*2+manual)))
+
     def open(self):
         # TODO - clear the current graph
         dialog = FileBrowserDialog('Open Pipeline File', 'open')
@@ -82,8 +86,7 @@ class Toolbar(QtWidgets.QWidget):
         self.graph.clearGraph()
         self.graph.loadGraph(filePath=dialog.selectedFiles()[0])
         self.filename_changed.emit(dialog.selectedFiles()[0])
-        automated, manual = self.graph.analyze_connections()
-        self.failure_points_number.setText('%s/%s' % (str(manual), str(automated*2+manual)))
+        self.update_failure_points()
 
     def csv(self):
         dialog = FileBrowserDialog("Export CSV", "save")
