@@ -75,6 +75,7 @@ class PipeBuilder(QtWidgets.QDialog):
 
     def on_select_item(self):
         self.scroll.show()
+        self.toolbar.update_failure_points()
 
     @staticmethod
     def fix_name(name_):
@@ -150,6 +151,7 @@ class PipeBuilder(QtWidgets.QDialog):
     @QtCore.Slot()
     def on_graphSaved(self, data):
         self.on_filename_changed(data)
+        # we don't save the .jpg here because it requires a restart at this time.
         print 'graph saved !'
 
     @QtCore.Slot()
@@ -219,25 +221,31 @@ class PipeBuilder(QtWidgets.QDialog):
         '''
         query_attributes = ['name', 'description', 'pipeID', 'software', 'preflight_data']
         all_info = []
-        for item in self.graph.scene().selectedItems():
-            node_settings = {}
-            for setting in query_attributes:
-                val = getattr(item, setting)
-                node_settings[setting] = val
+        if self.graph.scene().selectedItems():
+            item = self.graph.scene().selectedItems()[0]
+            if isinstance(item, nodz.NodeItem):
+                print 'made it'
+                node_settings = {}
+                for setting in query_attributes:
+                    val = getattr(item, setting)
+                    node_settings[setting] = val
 
-            # add socket-plug data
-            sockets = {}
-            plugs = {}
-            for socket in item.sockets.itervalues():
-                sockets[socket.index] = socket.attribute
-            for plug in item.plugs.itervalues():
-                plugs[plug.index] = plug.attribute
-            node_settings['sockets'] = sockets
-            node_settings['plugs'] = plugs
+                # add socket-plug data
+                sockets = {}
+                plugs = {}
+                for socket in item.sockets.itervalues():
+                    sockets[socket.index] = socket.attribute
+                for plug in item.plugs.itervalues():
+                    plugs[plug.index] = plug.attribute
+                node_settings['sockets'] = sockets
+                node_settings['plugs'] = plugs
 
-            all_info.append(node_settings)
-
-        return all_info
+                all_info.append(node_settings)
+                return all_info
+            elif isinstance(item, nodz.GroupItem):
+                print item, 'is a group item'
+            else:
+                print 'instance is: %s' % type(item)
 
     def closeEvent(self, event):
         if self.graph.filepath:
