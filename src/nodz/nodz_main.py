@@ -885,6 +885,21 @@ class Nodz(QtWidgets.QGraphicsView):
         else:
             self.signal_AttrEdited.emit(node.name, index, index)
 
+    def analyze_connections(self):
+        automated = 0
+        manual = 0
+        for item in self.scene().nodes:
+            for k in self.scene().nodes[item].attrsData:
+                for attr in self.scene().nodes[item].attrsData[k]:
+                    if attr == 'automation_level':
+                        level = self.scene().nodes[item].attrsData[k][attr]
+                        if level.lower() == 'manual':
+                            manual += 1
+                        elif level.lower() == 'automated':
+                            automated += 1
+
+        return automated, manual
+
 
     # GRAPH
     def saveGraph(self, filePath='path'):
@@ -2557,9 +2572,11 @@ class ConnectionItem(QtWidgets.QGraphicsItemGroup):
 
         self.sc = self.source.scene()
 
-        self.output_tail = QtWidgets.QGraphicsLineItem()
-        self.connection = QtWidgets.QGraphicsLineItem()
-        self.input_tail = QtWidgets.QGraphicsLineItem()
+        self.line_1 = QtWidgets.QGraphicsLineItem()
+        self.line_3 = QtWidgets.QGraphicsLineItem()
+        self.line_2 = QtWidgets.QGraphicsLineItem()
+        self.line_4 = QtWidgets.QGraphicsLineItem()
+        self.line_5 = QtWidgets.QGraphicsLineItem()
         self.sc.addItem(self)
 
 
