@@ -2597,44 +2597,89 @@ class ConnectionItem(QtWidgets.QGraphicsItemGroup):
     def updatePath(self):
         dx = (self.target_point.x() - self.source_point.x()) * 0.5
         dy = self.target_point.y() - self.source_point.y()
+        xdiff = (self.target_point.x() - self.source_point.x())
 
-        self.removeFromGroup(self.output_tail)
-        self.removeFromGroup(self.connection)
-        self.removeFromGroup(self.input_tail)
+        self.removeFromGroup(self.line_1)
+        self.removeFromGroup(self.line_2)
+        self.removeFromGroup(self.line_3)
+        self.removeFromGroup(self.line_4)
+        self.removeFromGroup(self.line_5)
 
-        self.output_tail = QtWidgets.QGraphicsLineItem(QtCore.QLineF(self.source_point.x(), self.source_point.y(), self.source_point.x()+dx, self.source_point.y()))
-        self.connection = QtWidgets.QGraphicsLineItem(QtCore.QLineF(self.source_point.x()+dx, self.source_point.y(), self.source_point.x()+dx, self.source_point.y()+dy))
-        self.input_tail = QtWidgets.QGraphicsLineItem(QtCore.QLineF(self.source_point.x()+dx, self.source_point.y()+dy, self.source_point.x() + dx*2, self.source_point.y()+dy))
+        point_1 = QtCore.QPointF(self.source_point.x(), self.source_point.y())
+        point_2 = QtCore.QPointF(self.source_point.x() + dx, self.source_point.y())
+        point_4 = QtCore.QPointF(self.source_point.x() + dx, self.source_point.y() + dy)
+        point_6 = QtCore.QPointF(self.source_point.x() + dx * 2, self.source_point.y() + dy)
+        five_point_line = False
+        if xdiff < 120:
+            dx = 60
+            five_point_line = True
+            point_1 = QtCore.QPointF(self.source_point.x(), self.source_point.y())
+            point_2 = QtCore.QPointF(self.source_point.x() + 60, self.source_point.y())
+            # if target is below source:
+            if dy < -120:
+                point_3 = QtCore.QPointF(self.source_point.x() + 60, self.source_point.y() - 140)
+                point_4 = QtCore.QPointF(self.target_point.x() - 60, self.source_point.y() - 140)
+            else:
+                point_3 = QtCore.QPointF(self.source_point.x() + 60, self.source_point.y() + 100)
+                point_4 = QtCore.QPointF(self.target_point.x() - 60, self.source_point.y() + 100)
+            point_5 = QtCore.QPointF(self.target_point.x() - 60, self.target_point.y())
+            point_6 = QtCore.QPointF(self.target_point.x(), self.target_point.y())
 
-        grad = QtGui.QLinearGradient(QtCore.QPointF(self.source_point.x() + dx, self.target_point.y()), QtCore.QPointF(self.source_point.x() + dx, self.source_point.y()))
+        if five_point_line:
+            self.line_1 = QtWidgets.QGraphicsLineItem(QtCore.QLineF(point_1, point_2))
+            self.line_2 = QtWidgets.QGraphicsLineItem(QtCore.QLineF(point_2, point_3))
+            self.line_3 = QtWidgets.QGraphicsLineItem(QtCore.QLineF(point_3, point_4))
+            self.line_4 = QtWidgets.QGraphicsLineItem(QtCore.QLineF(point_4, point_5))
+            self.line_5 = QtWidgets.QGraphicsLineItem(QtCore.QLineF(point_5, point_6))
+        else:
+            self.line_1 = QtWidgets.QGraphicsLineItem(QtCore.QLineF(point_1, point_2))
+            self.line_4 = QtWidgets.QGraphicsLineItem(QtCore.QLineF(point_2, point_4))
+            self.line_5 = QtWidgets.QGraphicsLineItem(QtCore.QLineF(point_4, point_6))
+
+        grad = QtGui.QLinearGradient(QtCore.QPointF(point_1), QtCore.QPointF(point_2))
         grad.setSpread(QtGui.QLinearGradient.PadSpread)
 
         if self.target is not None and not self.target.attribute == "addSocket" and not self.target.attribute == "addPlug":
             if self.target.parent.attrsData[self.target.attribute]['automation_level'] == "Manual":
-                self.input_tail.setPen(self.manualPen)
+                self.line_5.setPen(self.manualPen)
                 grad.setColorAt(0, self.manualColor)
             else:
-                self.input_tail.setPen(self.autoPen)
+                self.line_5.setPen(self.autoPen)
                 grad.setColorAt(0, self.autoColor)
         else:
-            self.input_tail.setPen(self._pen)
+            self.line_5.setPen(self._pen)
             grad.setColorAt(0, self.defaultColor)
 
         if self.source is not None and not self.source.attribute == "addPlug" and not self.source.attribute == "addSocket":
             if self.source.parent.attrsData[self.source.attribute]['automation_level'] == "Manual":
-                self.output_tail.setPen(self.manualPen)
+                self.line_1.setPen(self.manualPen)
+                self.line_2.setPen(self.manualPen)
+                self.line_3.setPen(self.manualPen)
                 grad.setColorAt(1, self.manualColor)
             else:
-                self.output_tail.setPen(self.autoPen)
+                self.line_1.setPen(self.autoPen)
+                self.line_2.setPen(self.autoPen)
+                self.line_3.setPen(self.autoPen)
                 grad.setColorAt(1, self.autoColor)
         else:
-            self.output_tail.setPen(self._pen)
+            self.line_1.setPen(self._pen)
+            self.line_2.setPen(self._pen)
+            self.line_3.setPen(self._pen)
             grad.setColorAt(1, self.defaultColor)
 
-        self.connection.setPen(QtGui.QPen(QtGui.QBrush(grad), self.penWidth))
-        self.addToGroup(self.output_tail)
-        self.addToGroup(self.input_tail)
-        self.addToGroup(self.connection)
+        self.line_4.setPen(QtGui.QPen(QtGui.QBrush(grad), self.penWidth))
+        if five_point_line:
+            self.addToGroup(self.line_1)
+            self.addToGroup(self.line_2)
+            self.addToGroup(self.line_3)
+            self.addToGroup(self.line_5)
+            self.addToGroup(self.line_4)
+        else:
+            self.addToGroup(self.line_1)
+            self.addToGroup(self.line_5)
+            self.addToGroup(self.line_4)
+            self.line_2.hide()
+            self.line_3.hide()
         self.update()
 
     def _remove(self):
