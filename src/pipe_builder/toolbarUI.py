@@ -28,7 +28,9 @@ class Toolbar(QtWidgets.QWidget):
         self.loadbtn = QtWidgets.QPushButton('Import Graph')
         self.openbtn = QtWidgets.QPushButton('Open Graph')
         # self.csvbtn = QtWidgets.QPushButton('Create CSV')
-        self.pdfbtn = QtWidgets.QPushButton('Export PDF')
+        self.pdfbtn = QtWidgets.QPushButton('Export JPG')
+        self.failure_points_label = QtWidgets.QLabel('Failure Points:')
+        self.failure_points_number = QtWidgets.QLabel('Not Calculated')
 
         self.addbtn.clicked.connect(self.graph_create_node)
         self.savebtn.clicked.connect(self.save_as)
@@ -44,6 +46,9 @@ class Toolbar(QtWidgets.QWidget):
         lay.addWidget(self.openbtn)
         # lay.addWidget(self.csvbtn)
         lay.addWidget(self.pdfbtn)
+        lay.addStretch(1)
+        lay.addWidget(self.failure_points_label)
+        lay.addWidget(self.failure_points_number)
         lay.addItem(QtWidgets.QSpacerItem(0, 0, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum))
         self.setLayout(lay)
 
@@ -71,6 +76,10 @@ class Toolbar(QtWidgets.QWidget):
         dialog.exec_()
         self.graph.loadGraph(filePath=dialog.selectedFiles()[0])
 
+    def update_failure_points(self):
+        automated, manual = self.graph.analyze_connections()
+        self.failure_points_number.setText('%s/%s' % (str(manual), str(automated*2+manual)))
+
     def open(self):
         # TODO - clear the current graph
         dialog = FileBrowserDialog('Open Pipeline File', 'open')
@@ -78,6 +87,7 @@ class Toolbar(QtWidgets.QWidget):
         self.graph.clearGraph()
         self.graph.loadGraph(filePath=dialog.selectedFiles()[0])
         self.filename_changed.emit(dialog.selectedFiles()[0])
+        self.update_failure_points()
 
     def csv(self):
         dialog = FileBrowserDialog("Export CSV", "save")
