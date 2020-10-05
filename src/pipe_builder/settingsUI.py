@@ -193,13 +193,34 @@ class NodeSettingsBox(QtWidgets.QTabWidget):
                 i = isoc
                 table = self.inputs_table
             table.setItem(i, 0, name)
-            table.setItem(i, 1, automation_level)
+            # Need this to be a combo box
+            automation_options = ['manual', "automated"]
+            index = automation_options.index(str(attrsData[attr_name]['automation_level']).lower())
+            c_box = QtWidgets.QComboBox()
+            c_box.table = table
+            c_box.row = i
+            c_box.addItems(automation_options)
+            table.setCellWidget(i, 1, c_box)
+            c_box.setCurrentIndex(index)
+            c_box.currentIndexChanged.connect(self.automation_level_changed)
+            # table.setItem(i, 1, automation_level)
             table.setItem(i, 2, priority)
             table.setItem(i, 3, methodology)
             table.setItem(i, 4, duration)
             table.setItem(i, 5, frequency)
             table.setItem(i, 6, number_effected)
             table.setItem(i, 7, pretty_name)
+
+    def automation_level_changed(self):
+        combo_box = self.sender()
+        table = self.sender().table
+        row = self.sender().row
+        name = table.item(row, 0).text()
+        plugs = self.parent.graph.scene().selectedItems()[0].attrsData
+        print(name)
+        print(self.sender().currentText())
+        plugs[name]['automation_level'] = self.sender().currentText()
+        self.parent.graph.sc.updateScene()
 
     def spawn_properties(self, values, save):
         for attr, val in values.iteritems():
