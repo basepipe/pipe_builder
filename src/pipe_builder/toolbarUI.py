@@ -1,6 +1,6 @@
 from Qt import QtWidgets, QtGui, QtCore
 import random
-from inputUI import FileBrowserDialog, CreateNodeDialog
+from .inputUI import FileBrowserDialog, CreateNodeDialog
 
 
 class NavBar(QtWidgets.QWidget):

@@ -38,9 +38,9 @@ def _convertDataToColor(data=None, alternate=False, av=20):
 
     # wrong
     else:
-        print 'Color from configuration is not recognized : ', data
-        print 'Can only be [R, G, B] or [R, G, B, A]'
-        print 'Using default color !'
+        print('Color from configuration is not recognized : ', data)
+        print('Can only be [R, G, B] or [R, G, B, A]')
+        print('Using default color !')
         color = QtGui.QColor(120, 120, 120)
         if alternate:
             color = QtGui.QColor(120-av, 120-av, 120-av)
@@ -149,7 +149,7 @@ def _saveData(filePath, data):
     with open(filePath, 'w') as outfile:
         json.dump(data, outfile, sort_keys=True, indent=4, ensure_ascii=False)
 
-    print "Data successfully saved !"
+    print("Data successfully saved !")
     outfile.close()
 
 
@@ -166,6 +166,6 @@ def _loadData(filePath):
 
     json_file.close()
 
-    print "Data successfully loaded !"
+    print("Data successfully loaded !")
     return j_data
 

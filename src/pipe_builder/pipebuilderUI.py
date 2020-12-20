@@ -1,8 +1,8 @@
 import os
 from Qt import QtWidgets, QtCore
 import src.nodz.nodz_main as nodz
-from settingsUI import NodeSettingWidget
-from toolbarUI import Toolbar
+from src.pipe_builder.settingsUI import NodeSettingWidget
+from src.pipe_builder.toolbarUI import Toolbar
 
 ######################################################################
 # Test signals
@@ -87,12 +87,12 @@ class PipeBuilder(QtWidgets.QDialog):
     @QtCore.Slot(str)
     @staticmethod
     def on_nodeCreated(nodeName):
-        print 'node created : ', nodeName
+        print('node created : ', nodeName)
 
     @QtCore.Slot(str)
     @staticmethod
     def on_nodeDeleted(nodeName):
-        print 'node deleted : ', nodeName
+        print('node deleted : ', nodeName)
 
     @QtCore.Slot(str, str)
     def on_nodeEdited(self, nodeName, newName):
@@ -100,24 +100,24 @@ class PipeBuilder(QtWidgets.QDialog):
         fixed_name = self.fix_name(newName)
         line_edit.setText(fixed_name)
         # line_edit.setCursorPosition(100)
-        print 'node edited : {0}, new name : {1}'.format(nodeName, fixed_name)
+        print('node edited : {0}, new name : {1}'.format(nodeName, fixed_name))
 
     @QtCore.Slot(str)
     def on_nodeSelected(self, nodesName):
         # print 'node selected : ', nodesName
         all_info = self.query_selected_node_info()
-        print 'ALL_INFO', all_info
+        print('ALL_INFO', all_info)
         self.settingWidgets.refresh(settingData=all_info)
 
     @QtCore.Slot(str, object)
     @staticmethod
     def on_nodeMoved(nodeName, nodePos):
-        print 'node {0} moved to {1}'.format(nodeName, nodePos)
+        print('node {0} moved to {1}'.format(nodeName, nodePos))
 
     @QtCore.Slot(str)
     @staticmethod
     def on_nodeDoubleClick(nodeName):
-        print 'double click on node : {0}'.format(nodeName)
+        print('double click on node : {0}'.format(nodeName))
 
     # Attrs
     @QtCore.Slot(str, int)
@@ -128,45 +128,45 @@ class PipeBuilder(QtWidgets.QDialog):
     @QtCore.Slot(str, int)
     @staticmethod
     def on_attrDeleted(nodeName, attrId):
-        print 'attr Deleted : {0} at old index : {1}'.format(nodeName, attrId)
+        print('attr Deleted : {0} at old index : {1}'.format(nodeName, attrId))
 
     @QtCore.Slot(str, int, int)
     @staticmethod
     def on_attrEdited(nodeName, oldId, newId):
-        print 'attr Edited : {0} at old index : {1}, new index : {2}'.format(nodeName, oldId, newId)
+        print('attr Edited : {0} at old index : {1}, new index : {2}'.format(nodeName, oldId, newId))
 
     # Connections
     @QtCore.Slot(str, str, str, str)
     @staticmethod
     def on_connected(srcNodeName, srcPlugName, destNodeName, dstSocketName):
-        print 'connected src: "{0}" at "{1}" to dst: "{2}" at "{3}"'.format(srcNodeName, srcPlugName, destNodeName,
-                                                                            dstSocketName)
+        print('connected src: "{0}" at "{1}" to dst: "{2}" at "{3}"'.format(srcNodeName, srcPlugName, destNodeName,
+                                                                            dstSocketName))
 
     @QtCore.Slot(str, str, str, str)
     def on_disconnected(srcNodeName, srcPlugName, destNodeName, dstSocketName):
-        print 'disconnected src: "{0}" at "{1}" from dst: "{2}" at "{3}"'.format(srcNodeName, srcPlugName,
-                                                                                 destNodeName, dstSocketName)
+        print('disconnected src: "{0}" at "{1}" from dst: "{2}" at "{3}"'.format(srcNodeName, srcPlugName,
+                                                                                 destNodeName, dstSocketName))
 
     # Graph
     @QtCore.Slot()
     def on_graphSaved(self, data):
         self.on_filename_changed(data)
         # we don't save the .jpg here because it requires a restart at this time.
-        print 'graph saved !'
+        print('graph saved !')
 
     @QtCore.Slot()
     def on_graphLoaded(self, data):
-        print 'graph %s loaded !' % data
+        print('graph %s loaded !' % data)
 
     @QtCore.Slot()
     @staticmethod
     def on_graphCleared():
-        print 'graph cleared !'
+        print('graph cleared !')
 
     @QtCore.Slot()
     @staticmethod
     def on_graphEvaluated():
-        print 'graph evaluated !'
+        print('graph evaluated !')
 
     # Other
     @QtCore.Slot(object)
@@ -186,7 +186,7 @@ class PipeBuilder(QtWidgets.QDialog):
 
         for item in self.graph.scene().selectedItems():
             self.graph.editNode(node=item, newName=settings['name'], **saved_attributes)
-        print 'saving settings!'
+        print('saving settings!')
 
         # nodeA = self.graph.createNode(name='nodeA', preset='node_preset_1', position=None)
     def initialize_connections(self):
@@ -224,7 +224,7 @@ class PipeBuilder(QtWidgets.QDialog):
         if self.graph.scene().selectedItems():
             item = self.graph.scene().selectedItems()[0]
             if isinstance(item, nodz.NodeItem):
-                print 'made it'
+                print('made it')
                 node_settings = {}
                 for setting in query_attributes:
                     val = getattr(item, setting)
@@ -233,9 +233,9 @@ class PipeBuilder(QtWidgets.QDialog):
                 # add socket-plug data
                 sockets = {}
                 plugs = {}
-                for socket in item.sockets.itervalues():
+                for socket in item.sockets.values():
                     sockets[socket.index] = socket.attribute
-                for plug in item.plugs.itervalues():
+                for plug in item.plugs.values():
                     plugs[plug.index] = plug.attribute
                 node_settings['sockets'] = sockets
                 node_settings['plugs'] = plugs
@@ -243,18 +243,18 @@ class PipeBuilder(QtWidgets.QDialog):
                 all_info.append(node_settings)
                 return all_info
             elif isinstance(item, nodz.GroupItem):
-                print item, 'is a group item'
+                print(item, 'is a group item')
             else:
-                print 'instance is: %s' % type(item)
+                print('instance is: %s' % type(item))
 
     def closeEvent(self, event):
         if self.graph.filepath:
-            print 'Saving Graph to: %s' % self.graph.filepath
+            print('Saving Graph to: %s' % self.graph.filepath)
             self.graph.saveGraph(filePath=self.graph.filepath)
-            print 'Saving Graph Image to: %s' % self.graph.filepath.replace('json', 'jpg')
+            print('Saving Graph Image to: %s' % self.graph.filepath.replace('json', 'jpg'))
             self.graph.exportImage(filePath=self.graph.filepath.replace('json', 'jpg'))
         else:
-            print 'No Filepath set, skipping save'
+            print('No Filepath set, skipping save')
 
 
 if __name__ == '__main__':

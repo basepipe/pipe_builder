@@ -38,7 +38,7 @@ class NodeSettingWidget(QtWidgets.QWidget):
         self.settings = settingData
         if self.settings:
             self.signal_something_selected.emit()
-            for i in reversed(range(self.settings_box.count())):
+            for i in reversed(list(range(self.settings_box.count()))):
                 self.settings_box.itemAt(i).widget().setParent(None)
 
             # add default settings
@@ -49,7 +49,7 @@ class NodeSettingWidget(QtWidgets.QWidget):
             self.signal_nothing_selected.emit()
 
     def _savesettings(self):
-        for i in reversed(range(self.settings_box.count())):
+        for i in reversed(list(range(self.settings_box.count()))):
             self.settings_box.itemAt(i).widget()._save_properties()
         self.signal_SaveSettings.emit(self.settings)
 
@@ -218,12 +218,12 @@ class NodeSettingsBox(QtWidgets.QTabWidget):
         name = table.item(row, 0).text()
         plugs = self.parent.graph.scene().selectedItems()[0].attrsData
         print(name)
-        print(self.sender().currentText())
+        print((self.sender().currentText()))
         plugs[name]['automation_level'] = self.sender().currentText()
         self.parent.graph.sc.updateScene()
 
     def spawn_properties(self, values, save):
-        for attr, val in values.iteritems():
+        for attr, val in values.items():
             if attr in ['sockets', 'plugs']:
                 pass
             elif attr == 'preflight_data':
@@ -281,7 +281,7 @@ class NodeSettingsBox(QtWidgets.QTabWidget):
         #self.parent.create_new_attribute()
 
     def _save_properties(self):
-        for i in reversed(range(self.lay_settings.count())):
+        for i in reversed(list(range(self.lay_settings.count()))):
             widget = self.lay_settings.itemAt(i).widget()
             if hasattr(widget, 'objectname'):
                 self.parent.settingWidgets.settings[0][widget.objectname] = widget.value
@@ -324,7 +324,7 @@ class ComboSetting(QtWidgets.QWidget):
         self.combobox = QtWidgets.QComboBox()
         self.combobox.setMinimumWidth(62)
         if isinstance(value, dict):
-            for val in value.values():
+            for val in list(value.values()):
                 self.combobox.addItems(val)
         else:
             for val in value:

@@ -2,7 +2,7 @@ import os
 import pandas as pd
 import random
 from Qt import QtGui, QtCore, QtWidgets
-import nodz_utils as utils
+from . import nodz_utils as utils
 import shutil
 from pipe_builder.inputUI import NameInputs, FileBrowserDialog, CreateNodeDialog
 
@@ -342,11 +342,11 @@ class Nodz(QtWidgets.QGraphicsView):
         if event.key() == QtCore.Qt.Key_I:
 
             if self.scene().selectedItems():
-                print 'Creating Input for %s' % self.scene().selectedItems()[0]
+                print('Creating Input for %s' % self.scene().selectedItems()[0])
 
         if event.key() == QtCore.Qt.Key_O:
             if self.scene().selectedItems():
-                print 'Creating Output for %s' % self.scene().selectedItems()[0]
+                print('Creating Output for %s' % self.scene().selectedItems()[0])
 
         if event.key() == QtCore.Qt.Key_S and event.modifiers() == QtCore.Qt.ControlModifier:
             if self.filepath:
@@ -462,7 +462,7 @@ class Nodz(QtWidgets.QGraphicsView):
 
         """
         if self.filepath:
-            print self.filepath
+            print(self.filepath)
             selected_nodes = list()
             for node in self.scene().selectedItems():
                 selected_nodes.append(node.name)
@@ -473,7 +473,7 @@ class Nodz(QtWidgets.QGraphicsView):
             # Emit signal.
             self.signal_NodeDeleted.emit(selected_nodes)
         else:
-            print 'Save File Before Deleting.'
+            print('Save File Before Deleting.')
 
 
 
@@ -545,7 +545,7 @@ class Nodz(QtWidgets.QGraphicsView):
     def createGroup(self, name='Group', preset='node_default', position=None, alternate=True, **kwargs):
         namecache = name
         count = 0
-        while name in self.scene().nodes.keys():
+        while name in list(self.scene().nodes.keys()):
             name = '%s_%s' % (namecache, count)
             count += 1
         nodeItem = NodeGroup(name=name, alternate=alternate, preset=preset,
@@ -595,7 +595,7 @@ class Nodz(QtWidgets.QGraphicsView):
         # Check for name clashes
         namecache = name
         count = 0
-        while name in self.scene().nodes.keys():
+        while name in list(self.scene().nodes.keys()):
             name = '%s_%s' % (namecache, count)
             count += 1
         nodeItem = NodeItem(name=name, alternate=alternate, preset=preset,
@@ -634,12 +634,12 @@ class Nodz(QtWidgets.QGraphicsView):
         :param node: The node instance that you want to delete.
 
         """
-        if not node in self.scene().nodes.values():
-            print 'Node object does not exist !'
-            print 'Node deletion aborted !'
+        if not node in list(self.scene().nodes.values()):
+            print('Node object does not exist !')
+            print('Node deletion aborted !')
             return
 
-        if node in self.scene().nodes.values():
+        if node in list(self.scene().nodes.values()):
             nodeName = node.name
             node._remove()
 
@@ -657,22 +657,22 @@ class Nodz(QtWidgets.QGraphicsView):
         :param newName: The new name for the given node.
 
         """
-        if not node in self.scene().nodes.values():
-            print 'Node object does not exist !'
-            print 'Node edition aborted !'
+        if not node in list(self.scene().nodes.values()):
+            print('Node object does not exist !')
+            print('Node edition aborted !')
             return
 
         oldName = node.name
 
         if newName != None:
             # Check for name clashes
-            if newName in self.scene().nodes.keys():
+            if newName in list(self.scene().nodes.keys()):
 
                 # still update extra node data
-                for arg, val in kwargs.iteritems():
+                for arg, val in kwargs.items():
                     setattr(self.scene().nodes[newName], arg, val)
-                print 'A node with the same name already exists : {0}'.format(newName)
-                print 'Node edition aborted !'
+                print('A node with the same name already exists : {0}'.format(newName))
+                print('Node edition aborted !')
                 return
             else:
                 node.name = newName
@@ -682,21 +682,21 @@ class Nodz(QtWidgets.QGraphicsView):
         self.scene().nodes.pop(oldName)
 
         # set extra node data
-        for arg, val in kwargs.iteritems():
+        for arg, val in kwargs.items():
            setattr(self.scene().nodes[newName], arg, val)
 
         # Store new node name in the connections
         if node.sockets:
-            for socket in node.sockets.values():
+            for socket in list(node.sockets.values()):
                 for connection in socket.connections:
                     connection.socketNode = newName
 
         if node.plugs:
-            for plug in node.plugs.values():
+            for plug in list(node.plugs.values()):
                 for connection in plug.connections:
                     connection.plugNode = newName
 
-        for arg, vals in kwargs.iteritems():
+        for arg, vals in kwargs.items():
             setattr(node, arg, vals)
 
         node.update()
@@ -746,9 +746,9 @@ class Nodz(QtWidgets.QGraphicsView):
         :param socketMaxConnections: The maximum connections that the socket can have (-1 for infinite).
 
         """
-        if not node in self.scene().nodes.values():
-            print 'Node object does not exist !'
-            print 'Attribute creation aborted !'
+        if not node in list(self.scene().nodes.values()):
+            print('Node object does not exist !')
+            print('Attribute creation aborted !')
             return
 
         # namecache = name
@@ -781,9 +781,9 @@ class Nodz(QtWidgets.QGraphicsView):
         :param index: The index of the attribute in the node.
 
         """
-        if not node in self.scene().nodes.values():
-            print 'Node object does not exist !'
-            print 'Attribute deletion aborted !'
+        if not node in list(self.scene().nodes.values()):
+            print('Node object does not exist !')
+            print('Attribute deletion aborted !')
             return
 
         node._deleteAttribute(index)
@@ -808,15 +808,15 @@ class Nodz(QtWidgets.QGraphicsView):
         :param newIndex: The index for the given attribute.
 
         """
-        if not node in self.scene().nodes.values():
-            print 'Node object does not exist !'
-            print 'Attribute creation aborted !'
+        if not node in list(self.scene().nodes.values()):
+            print('Node object does not exist !')
+            print('Attribute creation aborted !')
             return
 
         if newName != None:
             if newName in node.attrs:
-                print 'An attribute with the same name already exists : {0}'.format(newName)
-                print 'Attribute edition aborted !'
+                print('An attribute with the same name already exists : {0}'.format(newName))
+                print('Attribute edition aborted !')
                 return
             else:
                 oldName = node.attrs[index]
@@ -847,7 +847,7 @@ class Nodz(QtWidgets.QGraphicsView):
             utils._swapListIndices(node.attrs, index, newIndex)
 
             # Refresh connections.
-            for plug in node.plugs.values():
+            for plug in list(node.plugs.values()):
                 plug.update()
                 if plug.connections:
                     for connection in plug.connections:
@@ -861,7 +861,7 @@ class Nodz(QtWidgets.QGraphicsView):
                             connection.plugAttr = newName
                         connection.updatePath()
 
-            for socket in node.sockets.values():
+            for socket in list(node.sockets.values()):
                 socket.update()
                 if socket.connections:
                     for connection in socket.connections:
@@ -916,7 +916,7 @@ class Nodz(QtWidgets.QGraphicsView):
         # Store nodes data.
         data['NODES'] = dict()
 
-        nodes = self.scene().nodes.keys()
+        nodes = list(self.scene().nodes.keys())
         for node in nodes:
             nodeInst = self.scene().nodes[node]
             preset = nodeInst.nodePreset
@@ -973,13 +973,13 @@ class Nodz(QtWidgets.QGraphicsView):
         if os.path.exists(filePath):
             data = utils._loadData(filePath=filePath)
         else:
-            print 'Invalid path : {0}'.format(filePath)
-            print 'Load aborted !'
+            print('Invalid path : {0}'.format(filePath))
+            print('Load aborted !')
             return False
 
         # Apply nodes data.
         nodesData = data['NODES']
-        nodesName = nodesData.keys()
+        nodesName = list(nodesData.keys())
 
         for name in nodesName:
             preset = nodesData[name]['preset']
@@ -1033,7 +1033,7 @@ class Nodz(QtWidgets.QGraphicsView):
                     number_effected = ''
 
                 # un-serialize data type if needed
-                if (isinstance(dataType, unicode) and dataType.find('<') == 0):
+                if (isinstance(dataType, str) and dataType.find('<') == 0):
                     dataType = eval(str(dataType.split('\'')[1]))
 
                 self.createAttribute(node=node,
@@ -1094,7 +1094,7 @@ class Nodz(QtWidgets.QGraphicsView):
             # self.csv = self.csv.append(pd.DataFrame([[item, inputs, required]], columns=self.csv.columns), ignore_index=True)
             # inputs = []
             # outputs = []
-            for plug in self.scene().nodes[item].plugs.keys():
+            for plug in list(self.scene().nodes[item].plugs.keys()):
                 self.csv = self.csv.append(pd.DataFrame([[item + " Output", plug,
                                                           self.scene().nodes[item].attrsData[plug]['priority'],
                                                           self.scene().nodes[item].attrsData[plug]['methodology'],
@@ -1103,7 +1103,7 @@ class Nodz(QtWidgets.QGraphicsView):
                                                           self.scene().nodes[item].attrsData[plug]['number_effected']
                                                           ]],
                                                         columns=self.csv.columns), ignore_index=True)
-            for plug in self.scene().nodes[item].sockets.keys():
+            for plug in list(self.scene().nodes[item].sockets.keys()):
                 self.csv = self.csv.append(pd.DataFrame([[item + " Input", plug,
                                                           self.scene().nodes[item].attrsData[plug]['priority'],
                                                           self.scene().nodes[item].attrsData[plug]['methodology'],
@@ -1151,12 +1151,12 @@ class Nodz(QtWidgets.QGraphicsView):
         try:
             plug = self.scene().nodes[sourceNode].plugs[sourceAttr]
         except KeyError:
-            print("Skipping source %s output connection creation due to missing attr: %s" % (sourceNode, sourceAttr))
+            print(("Skipping source %s output connection creation due to missing attr: %s" % (sourceNode, sourceAttr)))
             return
         try:
             socket = self.scene().nodes[targetNode].sockets[targetAttr]
         except KeyError:
-            print("Skipping target %s input connection creation due to missing attr: %s" % (targetNode, sourceAttr))
+            print(("Skipping target %s input connection creation due to missing attr: %s" % (targetNode, sourceAttr)))
             return
 
         connection = ConnectionItem(plug.center(), socket.center(), plug, socket)
@@ -1185,7 +1185,7 @@ class Nodz(QtWidgets.QGraphicsView):
 
         data = list()
 
-        for item in scene.items():
+        for item in list(scene.items()):
             if isinstance(item, ConnectionItem):
                 connection = item
 
@@ -1209,7 +1209,7 @@ class Nodz(QtWidgets.QGraphicsView):
 
     def connectNewPlugs(self):
         for plug in self.newPlugs:
-            print plug
+            print(plug)
 
     ##################################################################
     # END API
@@ -1297,7 +1297,7 @@ class NodeScene(QtWidgets.QGraphicsScene):
         Update the connections position.
 
         """
-        for connection in [i for i in self.items() if isinstance(i, ConnectionItem)]:
+        for connection in [i for i in list(self.items()) if isinstance(i, ConnectionItem)]:
             # try:
             if connection.target is not None and connection.source is not None:
                 connection.target_point = connection.target.center()
@@ -1336,7 +1336,7 @@ class GroupItem(QtWidgets.QGraphicsItem):
         self.nodes = nodes
         self.setZValue(-1)
         self.config = config
-        for arg, value in kwargs.iteritems():
+        for arg, value in kwargs.items():
             setattr(self, arg, value)
         self.software = ''
         # Storage
@@ -1404,7 +1404,7 @@ class GroupItem(QtWidgets.QGraphicsItem):
         max_x = 0
         max_y = 0
         for n in self.nodes:
-            print n.name, n.pos()
+            print(n.name, n.pos())
             if not min_x or n.pos().x() < min_x:
                 min_x = n.pos().x()
             if not min_y or n.pos().y() < min_y:
@@ -1421,7 +1421,7 @@ class GroupItem(QtWidgets.QGraphicsItem):
 
         self.baseHeight = height + 300
         self.baseWidth = width + 300
-        print 'setting center %s %s' % (center_x, center_y)
+        print('setting center %s %s' % (center_x, center_y))
         self.center_x = center_x
         self.center_y = center_y
         return QtCore.QPointF(center_x, center_y)
@@ -1513,8 +1513,8 @@ class GroupItem(QtWidgets.QGraphicsItem):
 
         """
         if name in self.attrs:
-            print 'An attribute with the same name already exists on this node : {0}'.format(name)
-            print 'Attribute creation aborted !'
+            print('An attribute with the same name already exists on this node : {0}'.format(name))
+            print('Attribute creation aborted !')
             return
 
         self.attrPreset = preset
@@ -1592,7 +1592,7 @@ class GroupItem(QtWidgets.QGraphicsItem):
         name = self.attrs[index]
 
         # Remove socket and its connections.
-        if name in self.sockets.keys():
+        if name in list(self.sockets.keys()):
             for connection in self.sockets[name].connections:
                 connection._remove()
 
@@ -1600,7 +1600,7 @@ class GroupItem(QtWidgets.QGraphicsItem):
             self.sockets.pop(name)
 
         # Remove plug and its connections.
-        if name in self.plugs.keys():
+        if name in list(self.plugs.keys()):
             for connection in self.plugs[name].connections:
                 connection._remove()
 
@@ -1628,12 +1628,12 @@ class GroupItem(QtWidgets.QGraphicsItem):
         self.scene().nodes.pop(self.name)
 
         # Remove all sockets connections.
-        for socket in self.sockets.values():
+        for socket in list(self.sockets.values()):
             while len(socket.connections) > 0:
                 socket.connections[0]._remove()
 
         # Remove all plugs connections.
-        for plug in self.plugs.values():
+        for plug in list(self.plugs.values()):
             while len(plug.connections) > 0:
                 plug.connections[0]._remove()
 
@@ -1709,12 +1709,12 @@ class GroupItem(QtWidgets.QGraphicsItem):
 
         """
         nodes = self.scene().nodes
-        print nodes
+        print(nodes)
         # self.scene().selectedNodes = nodes
-        for node in nodes.values():
+        for node in list(nodes.values()):
             node.setZValue(1)
         for n in self.nodes:
-            print 'selecting %s' % n
+            print('selecting %s' % n)
         self.setZValue(-2)
 
         super(GroupItem, self).mousePressEvent(event)
@@ -1780,7 +1780,7 @@ class GroupItem(QtWidgets.QGraphicsItem):
         """
         nodzInst = self.scene().views()[0]
 
-        for item in nodzInst.scene().items():
+        for item in list(nodzInst.scene().items()):
             if isinstance(item, ConnectionItem):
                 item.setZValue(-2)
 
@@ -1855,7 +1855,7 @@ class NodeItem(QtWidgets.QGraphicsItem):
 
         self.setZValue(1)
         self.config = config
-        for arg, value in kwargs.iteritems():
+        for arg, value in kwargs.items():
             setattr(self, arg, value)
         if not self.software:
             self.software = 'No Software Defined'
@@ -2017,8 +2017,8 @@ class NodeItem(QtWidgets.QGraphicsItem):
 
         """
         if name in self.attrs:
-            print 'An attribute with the same name already exists on this node : {0}'.format(name)
-            print 'Attribute creation aborted !'
+            print('An attribute with the same name already exists on this node : {0}'.format(name))
+            print('Attribute creation aborted !')
             return
 
         self.attrPreset = preset
@@ -2026,7 +2026,7 @@ class NodeItem(QtWidgets.QGraphicsItem):
         plugInst = None
         socketInst = None
         if plug:
-            print 'creating %s' % name, pretty_name
+            print('creating %s' % name, pretty_name)
             plugInst = PlugItem(parent=self,
                                 attribute=name,
                                 index=self.attrCount,
@@ -2096,7 +2096,7 @@ class NodeItem(QtWidgets.QGraphicsItem):
         name = self.attrs[index]
 
         # Remove socket and its connections.
-        if name in self.sockets.keys():
+        if name in list(self.sockets.keys()):
             for connection in self.sockets[name].connections:
                 connection._remove()
 
@@ -2104,7 +2104,7 @@ class NodeItem(QtWidgets.QGraphicsItem):
             self.sockets.pop(name)
 
         # Remove plug and its connections.
-        if name in self.plugs.keys():
+        if name in list(self.plugs.keys()):
             for connection in self.plugs[name].connections:
                 connection._remove()
 
@@ -2132,12 +2132,12 @@ class NodeItem(QtWidgets.QGraphicsItem):
         self.scene().nodes.pop(self.name)
 
         # Remove all sockets connections.
-        for socket in self.sockets.values():
+        for socket in list(self.sockets.values()):
             while len(socket.connections) > 0:
                 socket.connections[0]._remove()
 
         # Remove all plugs connections.
-        for plug in self.plugs.values():
+        for plug in list(self.plugs.values()):
             while len(plug.connections) > 0:
                 plug.connections[0]._remove()
 
@@ -2273,10 +2273,10 @@ class NodeItem(QtWidgets.QGraphicsItem):
 
         """
         nodes = self.scene().nodes
-        for node in nodes.values():
+        for node in list(nodes.values()):
             node.setZValue(1)
 
-        for item in self.scene().items():
+        for item in list(self.scene().items()):
             if isinstance(item, ConnectionItem):
                 item.setZValue(1)
 
@@ -2342,7 +2342,7 @@ class NodeItem(QtWidgets.QGraphicsItem):
         """
         nodzInst = self.scene().views()[0]
 
-        for item in nodzInst.scene().items():
+        for item in list(nodzInst.scene().items()):
             if isinstance(item, ConnectionItem):
                 item.setZValue(0)
 
@@ -2558,7 +2558,7 @@ class SlotItem(QtWidgets.QGraphicsItem):
             if target.accepts(self):
 
                 if newStartpoint == -1 or newEndpoint == -1:
-                    print "Failed to Name Plug"
+                    print("Failed to Name Plug")
                     self.newConnection._remove()
                     return
 
@@ -2636,7 +2636,7 @@ class SlotItem(QtWidgets.QGraphicsItem):
         else:
             self.captured_output_name = nodeSocket.attribute
         startnode = self.check_type(nodeSocket)
-        if True in startnode.values():
+        if True in list(startnode.values()):
             if self.captured_output_name == '':
                 dialog = NameInputs('Attribute Name')
                 #dialog.output.setText(self.captured_output_name)
@@ -2654,7 +2654,7 @@ class SlotItem(QtWidgets.QGraphicsItem):
                                                    plugMaxConnections=-1,
                                                    socketMaxConnections=-1)
             else:
-                print 'No Name for attr defined'
+                print('No Name for attr defined')
                 return -1
             # cleanup
 
@@ -2821,7 +2821,7 @@ class PlugItem(SlotItem):
             if connection in self.connections:
                 self.connections.remove(connection)
         else:
-            print 'No disconnection of plug while space is held'
+            print('No disconnection of plug while space is held')
 
 
 class SocketItem(SlotItem):
@@ -2931,7 +2931,7 @@ class SocketItem(SlotItem):
             if connection in self.connections:
                 self.connections.remove(connection)
         else:
-            print 'No Disconnect of socket while space is held'
+            print('No Disconnect of socket while space is held')
 
 
 class SocketAdd(SocketItem):
@@ -3221,10 +3221,10 @@ class ConnectionItem(QtWidgets.QGraphicsItemGroup):
         :return:
         """
         if self.source is not None:
-            print 'source:', self.source
+            print('source:', self.source)
             self.source.disconnect(self)
         if self.target is not None:
-            print 'target:', self.target
+            print('target:', self.target)
             self.target.disconnect(self)
 
         self.sc.removeItem(self)
@@ -3237,7 +3237,7 @@ class ConnectionItem(QtWidgets.QGraphicsItemGroup):
         """
         nodzInst = self.scene().views()[0]
         if not nodzInst.block_disconnect:
-            for item in nodzInst.scene().items():
+            for item in list(nodzInst.scene().items()):
                 if isinstance(item, ConnectionItem):
                     item.setZValue(0)
 
@@ -3370,16 +3370,16 @@ class NodeGroup(NodeItem):
     def populate(self, selection):
         for i in selection:
             self.items.append(i)
-            print i
+            print(i)
         for i in self.items:
-            for p in i.plugs.keys():
+            for p in list(i.plugs.keys()):
                 for con in i.plugs[p].connections:
                     if con not in self.connections:
                         self.connections.append(con)
                     if not con.socketItem or con.socketItem.parent not in self.items:
                         self.oldPlugs[p] = i.plugs[p]
                         self.outgoing[p] = con
-            for s in i.sockets.keys():
+            for s in list(i.sockets.keys()):
                 for con in i.sockets[s].connections:
                     if con not in self.connections:
                         self.connections.append(con)
@@ -3387,7 +3387,7 @@ class NodeGroup(NodeItem):
                         self.oldSockets[s] = i.sockets[s]
                         self.incoming[s] = con
 
-        for s in self.outgoing.keys():
+        for s in list(self.outgoing.keys()):
             c = self.outgoing[s]
             i = c.plugItem.parent
             self._createAttribute(s, self.attrCount, i.attrsData[s]['preset'], i.attrsData[s]['plug'],
@@ -3401,7 +3401,7 @@ class NodeGroup(NodeItem):
             self.newCon.append(ConnectionItem(c.socketItem.center(), self.plugs[s].center(), c.socketItem, self.plugs[s]))
             c.socketItem.connections.append(self.newCon[-1])
 
-        for p in self.incoming.keys():
+        for p in list(self.incoming.keys()):
             c = self.incoming[p]
             i = c.socketItem.parent
             self._createAttribute(p, self.attrCount, i.attrsData[p]['preset'], i.attrsData[p]['plug'],
@@ -3428,9 +3428,9 @@ class NodeGroup(NodeItem):
         for c in self.connections:
             self.scene().addItem(c)
 
-        for con in self.outgoing.values():
+        for con in list(self.outgoing.values()):
             con.socketItem.connections.append(con)
-        for con in self.incoming.values():
+        for con in list(self.incoming.values()):
             con.plugItem.connections.append(con)
 
         for i in self.items:
@@ -3442,9 +3442,9 @@ class NodeGroup(NodeItem):
         for c in self.connections:
             self.scene().removeItem(c)
 
-        for c in self.incoming.values():
+        for c in list(self.incoming.values()):
             c.plugItem.connections.remove(c)
-        for c in self.outgoing.values():
+        for c in list(self.outgoing.values()):
             c.socketItem.connections.remove(c)
 
         for i in self.items:
